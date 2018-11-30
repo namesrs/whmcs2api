@@ -1,2 +1,2 @@
 # whmcs
-Oficial WHMCS module
+Official WHMCS module
