@@ -26,19 +26,6 @@ echo $lineBreak."* Creating email templates *";
 Tools::createEmailTemplates();
 
 echo $lineBreak."* Creating SQL tables".$lineBreak;
-echo "- Creating tblnamesrstlds table".$lineBreak;
-$q = 'CREATE TABLE IF NOT EXISTS `tblnamesrstlds` (
-  `Tld` char(255) NOT NULL, 
-  `Threshold` int(11) NOT NULL, 
-  `Renew` tinyint(1) NOT NULL, 
-  `LocalPresenceRequired` tinyint(1) NOT NULL, 
-  `LocalPresenceOffered` tinyint(1) NOT NULL, 
-  `AuthCodeRequired` tinyint(1) NOT NULL, 
-  `Country` char(255) NOT NULL, 
-  UNIQUE KEY `tld` (`Tld`) 
-)';
-mysql_query($q);
-if(mysql_error()) echo mysql_error().$lineBreak;
 
 echo "- Creating tblnamesrsjobs table".$lineBreak;
 $q = 'CREATE TABLE IF NOT EXISTS `tblnamesrsjobs` (
