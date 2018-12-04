@@ -1,4 +1,4 @@
-# Oficial WHMCS module
+# WHMCS module beta
 
 ## WHMCS domain registration plugin for the NameISP API
 
