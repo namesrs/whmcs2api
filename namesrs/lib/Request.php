@@ -120,7 +120,7 @@ Class Request
 
 	private function login()
 	{
-		$result =  $this->sendRequest('GET','/authenticate/login/'.$this->account);
+		$result =  $this->sendRequest('GET','/authenticate/login/'.$this->account,'');
  		SessionCache::put($result['parameters']['token'],$this->account);
 		return $result;
 	}
