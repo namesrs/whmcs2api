@@ -201,7 +201,7 @@ Class Request
 	private function sendRequest($action, $functionName,$myParams, $second = false)
 	{
 		$result = $this->call($action,$functionName,$myParams);
-		if ( $result['code']==1000) return $result;
+		if ($result['code']==1000 OR $result['code']==1300) return $result;
     elseif ($result['code']==2200)
     {
       if($second) throw new Exception('Could not authenticate to the API');
