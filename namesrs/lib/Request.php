@@ -982,7 +982,7 @@ Class Request
 
 	public function checkExpiring()
 	{
-	  $result = Capsule::select('SELECT domain,expirydate FROM tbldomains WHERE registrar="namesrs" AND status="Active" AND donotrenew = 0');
+	  $result = Capsule::select('SELECT domain,expirydate FROM tbldomains WHERE registrar= ? AND status="Active" AND donotrenew = 0',array($this->params['registrar']));
 	  foreach($result as &$dom)
 	  {
 	    $this->domainName = $dom->domain;

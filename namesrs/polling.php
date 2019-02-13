@@ -18,7 +18,7 @@ define('MARGIN_DAYS',2); // at least 2 days difference - othweise do not report
 
 $account = "namesrs";
 $cfg = getRegistrarConfigOptions($account);
-
+$cfg['registrar'] = $account;
 $request = new Request($cfg);
 $request->checkExpiring();
 
