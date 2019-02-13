@@ -69,7 +69,7 @@ Class DomainCache
 
 	public static function put($domain)
 	{
-		if(!$_SESSION['namesrsDomainCache']) $_SESSION['namesrsDomainCache'] = array();
+		if(!$_SESSION['namesrsDomainCache'] OR count($_SESSION['namesrsDomainCache']) > 1000) $_SESSION['namesrsDomainCache'] = array();
 		$_SESSION['namesrsDomainCache'][$domain['domainname']] = $domain;
 	}
 
@@ -980,6 +980,45 @@ Class Request
     }
 	}
 
+	public function checkExpiring()
+	{
+	  $result = Capsule::select('SELECT domain,expirydate FROM tbldomains WHERE registrar="namesrs" AND status="Active" AND donotrenew = 0');
+	  foreach($result as &$dom)
+	  {
+	    $this->domainName = $dom->domain;
+	    try
+	    {
+  	    $info = $this->searchDomain();
+  	    if(!$info) continue; // this domain was not found by NameISP
+      	if($info['renewaldate']!='') $expiration = $info['renewaldate'];
+      	  else $expiration = substr($info['expires'],0,10);
+      	$active = ($info['status']['200'] != ''); 	    
+      	if(abs(str_replace($dom->expirydate) - str_replace($expiration)) > MARGIN_DAYS)
+      	{
+          $mail = new PHPMailer;
+          $mail->isSMTP();
+          $mail->Host = SMTP_HOST;
+          $mail->SMTPAuth = true;
+          $mail->Username = SMTP_USER;
+          $mail->Password = SMTP_PASS;
+          $mail->SMTPSecure = SMTP_SECURE;
+          $mail->Port = SMTP_PORT;
+          $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+          $mail->addAddress(SMTP_RECIPIENT);
+          $mail->Subject = SMTP_SUBJECT.' -- '.$dom->domain;
+          $mail->Body = "WHMCS thinks that domain '".$dom->domain."' expires on ".$dom->expirydate."\n"
+            ."However, NameISP reports the expiration date as ".$expiration." (".($active ? "active" : "inactive").")";
+        
+          if(!$mail->send()) echo 'Error sending expiration notification - ',$mail->ErrorInfo,"\n";    	  
+      	}
+      }
+      catch(Exception $e)
+      {
+        echo "Exception during API call - ".$e->getMessage()."\n";
+      }
+	  }
+  }
+  
 }
 
 ?>
