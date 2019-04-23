@@ -135,7 +135,7 @@ function namesrs_SaveDNS($params)
 	$request = createRequest($params);
 	try
 	{
-	  if(is_array) 
+	  if(is_array($params['dnsrecords'])) 
 	  {
 	    $i = 0;
   	  while($i<count($params['dnsrecords']))
