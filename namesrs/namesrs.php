@@ -497,7 +497,6 @@ function namesrs_GetEPPCode($params)
 
 function namesrs_RegisterDomain($params) 
 {
-	$request = createRequest($params);
 	try
 	{
 	  // Different TLDs use different names for the field which holds VAT number 
