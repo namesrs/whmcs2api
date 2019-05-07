@@ -379,12 +379,12 @@ Class Request
   	    $ns = explode('.',trim(trim($this->params['ns'.$i]),'.'));
   	    if(count($ns)>2) $nserver[] = implode('.',$ns);
   	  }
-    $domainName = $this->params['sld']. '.' . $this->params['tld'];
+    $domainName = $this->params['domainObj']->getDomain(TRUE);
 
 	  $result = $this->request('POST','/domain/create_domain_registration',Array('domainname'=>$domainName,'itemyear'=>$years,'ownerid'=>$owner_id,'shieldwhois'=>(int)$protect,'nameserver'=>$nserver,'tmchacceptance'=>1));
 		$this->queueRequest(4 /* register */,$this->params['domainid'],$result['parameters']['requestID'][0],json_encode(Array('ns'=>$nserver)));
 		localAPI('UpdateClientDomain',Array(
-		  'domainid' => $this->params['domaind'],
+		  'domainid' => $this->params['domainid'],
 		  'status' => 'Pending'
 		));
 		return $result['parameters']['requestID'][0];
