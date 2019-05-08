@@ -497,38 +497,37 @@ function namesrs_GetEPPCode($params)
 
 function namesrs_RegisterDomain($params) 
 {
-  $data = (is_array($params['original']) ? $params['original'] : $params);
 	try
 	{
 	  // Different TLDs use different names for the field which holds VAT number 
 	  // we can not cope with that so we check for the field "Tax ID" which should be defined for all relevant domains in "/whmcs/resources/domains/additionalfields.php"
-		if(trim($data['additionalfields']['Tax ID'])=='')
+		if(trim($params['additionalfields']['Tax ID'])=='')
 		{
 		  // this domain does not require OrgNumber - so try to get it from the client profile
 			$result = Capsule::select('SELECT cfv.value FROM `tblcustomfields` AS cf 
                         JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = ?) 
-                        WHERE cf.fieldname LIKE ? AND cf.type = "client"',Array($data['userid'],'orgnr|%'));
-  		$data['orgnr'] = $result[0]->value;
+                        WHERE cf.fieldname LIKE ? AND cf.type = "client"',Array($params['userid'],'orgnr|%'));
+  		$params['original']['orgnr'] = $result[0]->value;
 		}
-		else $data['orgnr'] = $data['additionalfields']['Tax ID'];
-		if(empty($data['orgnr'])) $data['orgnr'] = '000000-0000';
+		else $params['original']['orgnr'] = $params['additionalfields']['Tax ID'];
+		if($params['original']['orgnr']=='') $params['original']['orgnr'] = '000000-0000';
       // return array('error' => 'Organization number / Personal Number is required. Please update contact details in profile.');
-    if(empty($data['firstname'])
-            || empty($data['lastname'])
-            || empty($data['address1'])
-            || empty($data['postcode'])
-            || empty($data['city'])
-            || empty($data['countrycode'])
-            || empty($data['phonenumberformatted'])
-            || empty($data['email']))
+    if(empty($params['original']['firstname'])
+            || empty($params['original']['lastname'])
+            || empty($params['original']['address1'])
+            || empty($params['original']['postcode'])
+            || empty($params['original']['city'])
+            || empty($params['original']['countrycode'])
+            || empty($params['original']['phonenumberformatted'])
+            || empty($params['original']['email']))
     {
       return array('error' => 'Contact details are required. Please update contact details in profile.');
     }
 		
-  	$request = createRequest($data);
+  	$request = createRequest($params);
 
 	  $owner_id = $request->makeContact(); // Always create new contact - NameISP will remove duplicates on their side
-	  $req_id = $request->registerDomain($data['regperiod'],$owner_id,$data['idprotection']); 
+	  $req_id = $request->registerDomain($params['regperiod'],$owner_id,$params['idprotection']); 
 	  return array('success' => true);
 	}
   catch (Exception $e) 

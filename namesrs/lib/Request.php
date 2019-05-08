@@ -108,8 +108,8 @@ Class Request
 		if($this->params['API_key']=='') throw new Exception('Missing API key');
 		if($this->params['Base_URL']=='') $this->base_url = 'api.domainname.systems';
     logModuleCall(
-      'CreateRequest',
-      '',
+      'nameSRS',
+      'create_request',
       $params,
       '',
       '',
@@ -398,17 +398,18 @@ Class Request
 
 	public function makeContact() 
 	{
+	  $orig = is_array($this->params['original']) ? $this->params['original'] : $this->params;
 	  $data = Array(
-	    'firstname' => $this->params['firstname'],
-	    'lastname' => $this->params['lastname'],
-	    'organization' => $this->params['companyname'],
-	    'orgnr' => $this->params['orgnr'],
-	    'address1' => $this->params['address1'],
-	    'zipcode' => $this->params['postcode'],
-	    'city' => $this->params['city'],
-	    'countrycode' => $this->params['countrycode'],
-	    'phone' => $this->params['fullphonenumber'], // +CC.xxxx
-	    'email' => $this->params['email']
+	    'firstname' => $orig['firstname'],
+	    'lastname' => $orig['lastname'],
+	    'organization' => $orig['companyname'],
+	    'orgnr' => $orig['orgnr'],
+	    'address1' => $orig['address1'],
+	    'zipcode' => $orig['postcode'],
+	    'city' => $orig['city'],
+	    'countrycode' => $orig['countrycode'],
+	    'phone' => $orig['fullphonenumber'], // +CC.xxxx
+	    'email' => $orig['email']
 	  );
 		$res = $this->request('POST','/contact/createcontact',$data);
 		return $res['contactid'];
