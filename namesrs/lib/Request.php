@@ -709,6 +709,7 @@ Class Request
                     '',
                     array()
                   );
+                  /*
           	      $r = localAPI('UpdateClientDomain',Array(
           	        'domainid' => $reg->domain_id,
           	        'status' => 'Cancelled'
@@ -734,6 +735,7 @@ Class Request
              				"domain_transfer_failure_reason" => $substatus_name,
              			);
             			$results = localAPI("SendAdminEmail",$values,Tools::getApiUser());
+            			*/
                 }
         	    }
         	    break;
@@ -932,6 +934,7 @@ Class Request
                   '',
                   array()
                 );
+                /*
         	      try
         	      {
          	        Capsule::delete('DELETE FROM tblnamesrsjobs WHERE id = ?',Array($reg->id));
@@ -957,6 +960,7 @@ Class Request
                   'status'=>$substatus_name,
                   'errors'=>$substatus_name)
                 );
+                */
               }
     	        break;
     	    }
