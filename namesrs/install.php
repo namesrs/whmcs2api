@@ -1,6 +1,5 @@
 <?php
 require_once("../../../init.php");
-require_once("lib/Tools.php");
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 
