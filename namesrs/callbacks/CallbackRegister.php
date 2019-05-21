@@ -61,7 +61,7 @@ elseif($status == 2000 AND ($substatus == 4998 OR $substatus == 4999))
   // remove from the queue
   $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 
-  domainStatus($req['domain_id'], 'Fraud');
+  domainStatus($req['domain_id'], 'Cancelled');
   emailAdmin("NameSRS Status", array(
     'domain_name' => $req['domain'],
     'orderType' => 'Domain Registration',
