@@ -1,4 +1,4 @@
-# WHMCS module beta
+# WHMCS module RC1
 
 ## WHMCS domain registration plugin for the NameISP API
 
