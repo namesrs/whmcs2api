@@ -41,16 +41,7 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
 	$cfg = getRegistrarConfigOptions($account);
 	$api = new RequestSRS($cfg);
 
-	if($json['template'] != 'REQUEST_UPDATE')
-  {
-    logModuleCall(
-      'nameSRS',
-      "Callback IGNORED from ".$_SERVER['REMOTE_ADDR'],
-      $json,
-      'Template is not REQUEST_UPDATE'
-    );
-  }
-  else
+	if($json['template'] == 'REQUEST_UPDATE')
   {
     $cb_id = (int)$json['callbackid'];
     $reqid = (int)$json['reqid'];
@@ -92,6 +83,59 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
       ''
     );
   }
+	elseif($json['template'] == 'ITEM_UPDATE')
+	{
+    $status = key($json['status']['mainstatus']);
+    $status_name = $json['status']['mainstatus'][$status];
+    $substatus = key($json['status']['substatus']);
+    $substatus_name = $json['status']['substatus'][$substatus];
+	  $domainname = idn_to_utf8($json['objectname']);
+	  if($domainname != '')
+	  {
+	    $expire = substr($json['renewaldate'],0,10);
+  	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = :name');
+  	    $stm->execute(array('exp' => $expire, 'name' => $domainname));
+        logModuleCall(
+          'nameSRS',
+          "Updated expiration date for ".$domainname,
+          $json['objectname'],
+          ''
+        );  	    
+  	  }
+  	  if($status == 200 OR $status == 201)
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+  	    $stm->execute(array('name' => $domainname, 'stat' => 'Active'));
+  	  }
+  	  elseif($status == 300)
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+  	    $stm->execute(array('name' => $domainname, 'stat' => 'Transferred Away'));
+  	  }
+  	  elseif(in_array((int)$status,Array(500,503,504)))
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+  	    $stm->execute(array('name' => $domainname, 'stat' => 'Expired'));
+  	  }
+  	}
+  	else logModuleCall(
+      'nameSRS',
+      "Could not convert the object name from IDN to UTF-8 - ".$json['objectname'],
+      $json,
+      ''
+    );  	
+	}
+	else
+  {
+    logModuleCall(
+      'nameSRS',
+      "Callback IGNORED from ".$_SERVER['REMOTE_ADDR'],
+      $json,
+      'Template is not recognized'
+    );
+  }  
 }
 catch (Exception $e)
 {
@@ -102,6 +146,7 @@ catch (Exception $e)
     $e->getMessage(),
     $e->getTrace()
   );
+  echo $e->getMessage(),"\n\n",$e->getTrace();
 }
 
 function domainStatus($domain_id, $status)
