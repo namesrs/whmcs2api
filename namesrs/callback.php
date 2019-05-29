@@ -6,17 +6,20 @@ require_once "lib/Request.php";
 
 use WHMCS\Database\Capsule as Capsule;
 
+$old_error_handler = set_error_handler('myErrorHandler',E_ALL & ~E_NOTICE | E_STRICT);
+
 $pdo = Capsule::connection()->getPdo();
 
 if(in_array($_SERVER['REMOTE_ADDR'],array(
 '91.237.66.70',
-))) try
+)) OR php_sapi_name() == 'cli') try
 {
   $payload = file_get_contents('php://input');
   $json = json_decode($payload,TRUE);
 	if(!(is_array($json) AND count($json)>0))
 	{
     header('HTTP/1.1 400 Empty payload', true, 400);
+    echo 'Empty payload';
     $headers = [];
     foreach ($_SERVER as $name => $value)
     {
@@ -45,10 +48,14 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
   {
     $cb_id = (int)$json['callbackid'];
     $reqid = (int)$json['reqid'];
-    $status = key($json['status']['mainstatus']);
-    $status_name = $json['status']['mainstatus'][$status];
-    $substatus = key($json['status']['substatus']);
-    $substatus_name = $json['status']['substatus'][$substatus];
+    if($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
+      else $status = '';
+    if($status != '') $status_name = $json['status']['mainstatus'][$status];
+      else $status_name = 'Unknown status';
+    if($json['status']['substatus']) $substatus = key($json['status']['substatus']);
+      else $substatus = '';
+    if($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
+      else $substatus_name = 'Unknown substatus';
     // NOT PROVIDED in REQUEST_UPDATE $renewaldate = $json['renewaldate']; // YYYY-MM-DD
 
     // our local queue of API requests, waiting their reply
@@ -85,47 +92,72 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
   }
 	elseif($json['template'] == 'ITEM_UPDATE')
 	{
-    $status = key($json['status']['mainstatus']);
-    $status_name = $json['status']['mainstatus'][$status];
-    $substatus = key($json['status']['substatus']);
-    $substatus_name = $json['status']['substatus'][$substatus];
-	  $domainname = idn_to_utf8($json['objectname']);
-	  if($domainname != '')
+	  if($json['objectname'] != '')
 	  {
-	    $expire = substr($json['renewaldate'],0,10);
-  	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
+      if($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
+        else $status = '';
+      if($status != '') $status_name = $json['status']['mainstatus'][$status];
+        else $status_name = 'Unknown status';
+      if($json['status']['substatus']) $substatus = key($json['status']['substatus']);
+        else $substatus = '';
+      if($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
+        else $substatus_name = 'Unknown substatus';
+  	  if(!function_exists('idn_to_utf8'))
   	  {
-  	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = :name');
-  	    $stm->execute(array('exp' => $expire, 'name' => $domainname));
-        logModuleCall(
+  	    include "lib/IDN.php";
+  	    $domain = new Net_IDNA2();
+  	    $domainname = $domain->decode($json['objectname']);
+    	  logModuleCall(
           'nameSRS',
-          "Updated expiration date for ".$domainname,
-          $json['objectname'],
+          'PHP function "idn_to_utf8" does not exist - check that INTL extension is enabled in PHP.INI',
+          $json,
           ''
-        );  	    
+        );
   	  }
-  	  if($status == 200 OR $status == 201)
+  	  else $domainname = idn_to_utf8($json['objectname']);
+  	  if($domainname != '')
   	  {
-  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-  	    $stm->execute(array('name' => $domainname, 'stat' => 'Active'));
-  	  }
-  	  elseif($status == 300)
-  	  {
-  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-  	    $stm->execute(array('name' => $domainname, 'stat' => 'Transferred Away'));
-  	  }
-  	  elseif(in_array((int)$status,Array(500,503,504)))
-  	  {
-  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-  	    $stm->execute(array('name' => $domainname, 'stat' => 'Expired'));
-  	  }
-  	}
+  	    $expire = substr($json['renewaldate'],0,10);
+    	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
+    	  {
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = :name');
+    	    $stm->execute(array('exp' => $expire, 'name' => $domainname));
+          logModuleCall(
+            'nameSRS',
+            "Updated expiration date for ".$domainname,
+            $json['objectname'],
+            ''
+          );
+    	  }
+    	  if($status == 200 OR $status == 201)
+    	  {
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+    	    $stm->execute(array('name' => $domainname, 'stat' => 'Active'));
+    	  }
+    	  elseif($status == 300)
+    	  {
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+    	    $stm->execute(array('name' => $domainname, 'stat' => 'Transferred Away'));
+    	  }
+    	  elseif(in_array((int)$status,Array(500,503,504)))
+    	  {
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
+    	    $stm->execute(array('name' => $domainname, 'stat' => 'Expired'));
+    	  }
+    	}
+    	else logModuleCall(
+        'nameSRS',
+        "Could not convert the object name from IDN to UTF-8 - ".$json['objectname'],
+        $json,
+        ''
+      );
+    }
   	else logModuleCall(
       'nameSRS',
-      "Could not convert the object name from IDN to UTF-8 - ".$json['objectname'],
+      'Missing "objectname" in the payload',
       $json,
       ''
-    );  	
+    );
 	}
 	else
   {
@@ -135,7 +167,7 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
       $json,
       'Template is not recognized'
     );
-  }  
+  }
 }
 catch (Exception $e)
 {
@@ -186,5 +218,94 @@ function namesrs_log($x)
 {
   syslog(LOG_INFO | LOG_LOCAL1, $x);
 }
+
+function myErrorHandler ($errno, $errstr, $errfile, $errline)
+{
+  header('HTTP/1.1 500 Error in callback', true, 500);
+  // Only handle the errors specified by the error_reporting directive or function
+  // Ensure that we should be displaying and/or logging errors
+  //if ( ! ($errno & error_reporting ()) || ! (ini_get ('display_errors') || ini_get ('log_errors'))) return;
+  if(($errno & (E_NOTICE | E_STRICT)) OR error_reporting()==0) return;
+
+  // define an assoc array of error string
+  // in reality the only entries we should
+  // consider are 2,8,256,512 and 1024
+  $errortype = array (
+    1   =>  'Error',
+    2   =>  'Warning',
+    4   =>  'Parsing Error',
+    8   =>  'Notice',
+    16  =>  'Core Error',
+    32  =>  'Core Warning',
+    64  =>  'Compile Error',
+    128 =>  'Compile Warning',
+    256 =>  'User Error',
+    512 =>  'User Warning',
+    1024=>  'User Notice',
+    2048=>  'Strict Mode',
+    4096=>  'Recoverable Error'
+  );
+  $s = "<br>\n<b>".$errortype[$errno]."</b><br>\n$errstr<br><br>\n\n# $errline, $errfile";
+	$MAXSTRLEN = 1500;
+	$s .= '<pre>';
+	$a = debug_backtrace();
+	$traceArr = array_reverse($a);
+	$tabs = 1;
+	if(count($traceArr)) foreach($traceArr as $arr)
+	{
+		if($arr['function']=='myErrorHandler') continue;
+		$Line = (isset($arr['line'])? $arr['line'] : "unknown");
+		$File = (isset($arr['file'])? str_replace('/var/www/whmcs','',$arr['file']) : "unknown");
+		$s.= "\n<br>";
+    for ($i=0; $i < $tabs; $i++)
+		{
+		  $s .= '#';
+		}
+		$s.= ' <b>'.$Line.'</b>, <font color=blue>'.$File."</font>\n<br>";
+    for ($i=0; $i < $tabs; $i++)
+		{
+		  $s .= ' ';
+		}
+		$tabs ++;
+		$s .= ' ';
+    if (isset($arr['class']))
+		{
+		  $s .= $arr['class'].'.';
+		}
+		$args = array();
+		if(!empty($arr['args'])) foreach($arr['args'] as $v)
+		{
+			if (is_null($v)) $args[] = 'NULL';
+			elseif (is_array($v)) $args[] = 'Array['.sizeof($v).']'.(sizeof($v)<=5 ? substr(serialize($v),0,$MAXSTRLEN) : '');
+			elseif (is_object($v)) $args[] = 'Object:'.get_class($v);
+			elseif (is_bool($v)) $args[] = $v ? 'true' : 'false';
+			else
+      {
+				$v = (string) @$v;
+				$str = htmlspecialchars(substr($v,0,$MAXSTRLEN));
+				if (strlen($v) > $MAXSTRLEN) $str .= '...';
+				$args[] = "\"".$str."\"";
+			}
+		}
+    if(isset($arr['function']))
+		{
+		  $s .= $arr['function'].'('.implode(', ',$args).')';
+		}
+    else
+		{
+		  $s .= '[PHP Kernel] ('.implode(', ',$args).')';
+		}
+	}
+	$s.= '</pre>';
+  logModuleCall(
+    'nameSRS',
+    "Error processing callback",
+    $s,
+    ''
+  );
+  echo $s;
+  die;
+}
+
 
 ?>
