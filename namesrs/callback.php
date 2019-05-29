@@ -11,6 +11,7 @@ $old_error_handler = set_error_handler('myErrorHandler',E_ALL & ~E_NOTICE | E_ST
 $pdo = Capsule::connection()->getPdo();
 
 if(in_array($_SERVER['REMOTE_ADDR'],array(
+'78.90.165.87',
 '91.237.66.70',
 )) OR php_sapi_name() == 'cli') try
 {
@@ -120,29 +121,51 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
   	    $expire = substr($json['renewaldate'],0,10);
     	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
     	  {
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = :name');
-    	    $stm->execute(array('exp' => $expire, 'name' => $domainname));
+    	    // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
+    	    $stm->execute(array('exp' => $expire));
           logModuleCall(
             'nameSRS',
             "Updated expiration date for ".$domainname,
             $json['objectname'],
-            ''
+            'Affected rows = '.$stm->rowCount()
           );
     	  }
     	  if($status == 200 OR $status == 201)
     	  {
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-    	    $stm->execute(array('name' => $domainname, 'stat' => 'Active'));
+          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
+    	    $stm->execute(array('stat' => 'Active'));
+          logModuleCall(
+            'nameSRS',
+            "Setting status to ACTIVE for ".$domainname,
+            $json['objectname'],
+            'Affected rows = '.$stm->rowCount()
+          );
     	  }
     	  elseif($status == 300)
     	  {
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-    	    $stm->execute(array('name' => $domainname, 'stat' => 'Transferred Away'));
-    	  }
+          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
+    	    $stm->execute(array('stat' => 'Transferred Away'));
+          logModuleCall(
+            'nameSRS',
+            "Setting status to TRANSFERRED AWAY for ".$domainname,
+            $json['objectname'],
+            'Affected rows = '.$stm->rowCount()
+          );
+        }
     	  elseif(in_array((int)$status,Array(500,503,504)))
     	  {
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = :name');
-    	    $stm->execute(array('name' => $domainname, 'stat' => 'Expired'));
+          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
+    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
+    	    $stm->execute(array('stat' => 'Expired'));
+          logModuleCall(
+            'nameSRS',
+            "Setting status to EXPIRED for ".$domainname,
+            $json['objectname'],
+            'Affected rows = '.$stm->rowCount()
+          );
     	  }
     	}
     	else logModuleCall(
