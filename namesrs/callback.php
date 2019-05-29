@@ -114,7 +114,7 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
           ''
         );
   	  }
-  	  else $domainname = idn_to_utf8($json['objectname']);
+  	  else $domainname = idn_to_utf8($json['objectname'], IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
   	  if($domainname != '')
   	  {
   	    $expire = substr($json['renewaldate'],0,10);
