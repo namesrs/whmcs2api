@@ -11,7 +11,6 @@ $old_error_handler = set_error_handler('myErrorHandler',E_ALL & ~E_NOTICE | E_ST
 $pdo = Capsule::connection()->getPdo();
 
 if(in_array($_SERVER['REMOTE_ADDR'],array(
-'78.90.165.87',
 '91.237.66.70',
 )) OR php_sapi_name() == 'cli') try
 {
