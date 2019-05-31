@@ -121,8 +121,7 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
     	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
     	  {
     	    // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :exp WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
-    	    $stm->execute(array('exp' => $expire));
+    	    $stm = $pdo->query('UPDATE tbldomains SET expirydate = "'.addslashes($expire).'", nextduedate = "'.addslashes($expire).'" WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
           logModuleCall(
             'nameSRS',
             "Updated expiration date for ".$domainname,
