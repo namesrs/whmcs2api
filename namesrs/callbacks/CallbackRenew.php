@@ -44,7 +44,7 @@ if($status == 2000)
     $values['status'] = 'Active';
     localAPI($command, $values, $admin);
     // remove from the queue
-    $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
 }
 else

@@ -29,7 +29,7 @@ if($status == 2000)
     $values['status'] = 'Active';
     $results 	= localAPI($command, $values, $admin);
     // completed - remove from the queue
-    $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
   elseif($substatus == 2004 OR $substatus == 4998)
   {
@@ -42,7 +42,7 @@ if($status == 2000)
     );
     domainStatus($req['domain_id'], 'Cancelled');
     // remote from the queue
-    $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
   else
   {
@@ -71,7 +71,7 @@ elseif($status == 300)
   );
   domainStatus($req['domain_id'], 'Transferred Away');
   // remove from the queue
-  $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 else
 {

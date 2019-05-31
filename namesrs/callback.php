@@ -46,7 +46,6 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
 
 	if($json['template'] == 'REQUEST_UPDATE')
   {
-    $cb_id = (int)$json['callbackid'];
     $reqid = (int)$json['reqid'];
     if($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
       else $status = '';
@@ -92,7 +91,8 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
   }
 	elseif($json['template'] == 'ITEM_UPDATE')
 	{
-	  if($json['objectname'] != '')
+    $domainid = (int)$json['itemdetails']['custom_field'];
+	  if($domainid != 0)
 	  {
       if($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
         else $status = '';
@@ -102,80 +102,55 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
         else $substatus = '';
       if($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
         else $substatus_name = 'Unknown substatus';
-  	  if(!function_exists('idn_to_utf8'))
+	    $expire = substr($json['renewaldate'],0,10);
+  	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
   	  {
-  	    include "lib/IDN.php";
-  	    $domain = new Net_IDNA2();
-  	    $domainname = $domain->decode($json['objectname']);
-    	  logModuleCall(
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :due WHERE registrar = "namesrs" AND id = :id');
+  	    $stm->execute(array('exp' => $expire, 'due' => $expire, 'id' => $domainid));
+        logModuleCall(
           'nameSRS',
-          'PHP function "idn_to_utf8" does not exist - check that INTL extension is enabled in PHP.INI',
-          $json,
-          ''
+          "Updated expiration date for ".$domainname,
+          $json['objectname'],
+          'Affected rows = '.$stm->rowCount()
         );
   	  }
-  	  else $domainname = idn_to_utf8($json['objectname'], IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
-  	  if($domainname != '')
+  	  if($status == 200 OR $status == 201)
   	  {
-  	    $expire = substr($json['renewaldate'],0,10);
-    	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
-    	  {
-    	    // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
-    	    $stm = $pdo->query('UPDATE tbldomains SET expirydate = "'.addslashes($expire).'", nextduedate = "'.addslashes($expire).'" WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
-          logModuleCall(
-            'nameSRS',
-            "Updated expiration date for ".$domainname,
-            $json['objectname'],
-            'Affected rows = '.$stm->rowCount()
-          );
-    	  }
-    	  if($status == 200 OR $status == 201)
-    	  {
-          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
-    	    $stm->execute(array('stat' => 'Active'));
-          logModuleCall(
-            'nameSRS',
-            "Setting status to ACTIVE for ".$domainname,
-            $json['objectname'],
-            'Affected rows = '.$stm->rowCount()
-          );
-    	  }
-    	  elseif($status == 300)
-    	  {
-          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
-    	    $stm->execute(array('stat' => 'Transferred Away'));
-          logModuleCall(
-            'nameSRS',
-            "Setting status to TRANSFERRED AWAY for ".$domainname,
-            $json['objectname'],
-            'Affected rows = '.$stm->rowCount()
-          );
-        }
-    	  elseif(in_array((int)$status,Array(500,503,504)))
-    	  {
-          // we need this hack with addslashes() because MySQL is unable to prepare the construction with explicit collation and gives syntax error
-    	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND domain = _utf8 "'.addslashes($domainname).'" COLLATE utf8_bin');
-    	    $stm->execute(array('stat' => 'Expired'));
-          logModuleCall(
-            'nameSRS',
-            "Setting status to EXPIRED for ".$domainname,
-            $json['objectname'],
-            'Affected rows = '.$stm->rowCount()
-          );
-    	  }
-    	}
-    	else logModuleCall(
-        'nameSRS',
-        "Could not convert the object name from IDN to UTF-8 - ".$json['objectname'],
-        $json,
-        ''
-      );
-    }
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
+  	    $stm->execute(array('stat' => 'Active', 'id' => $domainid));
+        logModuleCall(
+          'nameSRS',
+          "Setting status to ACTIVE for ".$domainname,
+          $json['objectname'],
+          'Affected rows = '.$stm->rowCount()
+        );
+  	  }
+  	  elseif($status == 300)
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
+  	    $stm->execute(array('stat' => 'Transferred Away', 'id' => $domainid));
+        logModuleCall(
+          'nameSRS',
+          "Setting status to TRANSFERRED AWAY for ".$domainname,
+          $json['objectname'],
+          'Affected rows = '.$stm->rowCount()
+        );
+      }
+  	  elseif(in_array((int)$status,Array(500,503,504)))
+  	  {
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
+  	    $stm->execute(array('stat' => 'Expired', 'id' => $domainid));
+        logModuleCall(
+          'nameSRS',
+          "Setting status to EXPIRED for ".$domainname,
+          $json['objectname'],
+          'Affected rows = '.$stm->rowCount()
+        );
+  	  }
+  	}
   	else logModuleCall(
       'nameSRS',
-      'Missing "objectname" in the payload',
+      "Missing domain ID - ".$json['objectname'],
       $json,
       ''
     );

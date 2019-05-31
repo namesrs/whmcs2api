@@ -66,6 +66,7 @@ function namesrs_RegisterDomain($params)
       'ownerid' => $owner_id,
       'shieldwhois' => (int)$params['idprotection'],
       'nameserver' => $nserver,
+      'custom_field' => $params['domainid'],
       'tmchacceptance' => 1
     ));
     $handle = $result['parameters']['requestID'][0];

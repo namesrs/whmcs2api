@@ -10,7 +10,7 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
   );
   domainStatus($req['domain_id'], 'Active');
   // completed - remove from queue
-  $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif(in_array((int)$status, Array(2,10,11,4000)))
 {
@@ -34,7 +34,7 @@ elseif($status == 201 OR $status == 500)
   );
   domainStatus($req['domain_id'], 'Expired');
   // remove from the queue
-  $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif($status == 300)
 {
@@ -47,7 +47,7 @@ elseif($status == 300)
   );
   domainStatus($req['domain_id'], 'Transferred Away');
   // remove from the queue
-  $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif($status == 2000 AND ($substatus == 4998 OR $substatus == 4999))
 {
@@ -59,7 +59,7 @@ elseif($status == 2000 AND ($substatus == 4998 OR $substatus == 4999))
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   // remove from the queue
-  $pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
+  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 
   domainStatus($req['domain_id'], 'Cancelled');
   emailAdmin("NameSRS Status", array(
