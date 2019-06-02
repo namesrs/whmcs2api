@@ -148,12 +148,16 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
         );
   	  }
   	}
-  	else logModuleCall(
-      'nameSRS',
-      "Missing domain ID - ".$json['objectname'],
-      $json,
-      ''
-    );
+  	else
+  	{
+      header('HTTP/1.1 400 Missing custom_field', true, 400);
+    	logModuleCall(
+        'nameSRS',
+        "Missing domain ID - ".$json['objectname'],
+        $json,
+        ''
+      );
+    }
 	}
 	else
   {
