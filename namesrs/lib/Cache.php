@@ -41,7 +41,7 @@ Class SessionCache
     $pdo = Capsule::connection()->getPdo(); 
     try
     {
-      $stm = $pdo->prepare('INSERT INTO mod_namesrssession (account, sessionId) VALUES(:sess,:acc) ON DUPLICATE KEY UPDATE sessionId = VALUES(sessionId)');
+      $stm = $pdo->prepare('INSERT INTO mod_namesrssession (sessionId, account) VALUES(:sess,:acc) ON DUPLICATE KEY UPDATE sessionId = VALUES(sessionId)');
       $stm->execute(array('acc' => $account, 'sess' => $sessionId));
     }
     catch (PDOException $e)
