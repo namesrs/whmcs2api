@@ -26,7 +26,7 @@ if($status == 2000)
       'domain = '.$req['domain'],
       $json
     );
-    $result = $this->request('GET',"/domain/domaindetails", Array('itemid' => $reqid));
+    $result = $api->request('GET',"/domain/domaindetails", Array('itemid' => $reqid));
     $domain = $result['items'][$reqid];
     $expire = substr($domain['renewaldate'],0,10);
     logModuleCall(

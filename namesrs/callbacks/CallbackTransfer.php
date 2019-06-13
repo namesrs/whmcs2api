@@ -10,7 +10,7 @@ if($status == 2000)
       $json,
       'Main status = 2000, substatus == 2001, domain = '.$req['domain']
     );
-    $result = $this->request('GET',"/domain/domaindetails", Array('itemid' => $reqid));
+    $result = $api->request('GET',"/domain/domaindetails", Array('itemid' => $reqid));
     $domain = $result['items'][$reqid];
     $expire = substr($domain['renewaldate'],0,10);
     logModuleCall(
