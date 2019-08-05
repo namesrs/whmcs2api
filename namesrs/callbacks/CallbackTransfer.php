@@ -22,10 +22,13 @@ if($status == 2000)
 
     $command  = "UpdateClientDomain";
     $admin   	= getAdminUser();
+    $dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
     $values   = array();
     $values["domainid"] = $req['domain_id'];
     $values["expirydate"] = $expire;
-    $values['nextduedate'] = $expire;
+    $expireDate = new DateTime($expire);
+    $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
+    $values['nextduedate'] = $expireDate->format('Y-m-d');
     $values['status'] = 'Active';
     $results 	= localAPI($command, $values, $admin);
     // completed - remove from the queue

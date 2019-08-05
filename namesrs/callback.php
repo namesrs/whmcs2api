@@ -105,8 +105,8 @@ if(in_array($_SERVER['REMOTE_ADDR'],array(
 	    $expire = substr($json['renewaldate'],0,10);
   	  if($expire!='' AND preg_match('/\d{4}-\d{2}-\d{2}/',$expire))
   	  {
-  	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = :due WHERE registrar = "namesrs" AND id = :id');
-  	    $stm->execute(array('exp' => $expire, 'due' => $expire, 'id' => $domainid));
+  	    $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = DATE_SUB(:exp,INTERVAL (SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1) day) WHERE registrar = "namesrs" AND id = :id');
+  	    $stm->execute(array('exp' => $expire, /*'due' => $expire,*/ 'id' => $domainid));
         logModuleCall(
           'nameSRS',
           "Updated expiration date for ".$domainname,
