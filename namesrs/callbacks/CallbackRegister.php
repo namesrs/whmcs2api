@@ -9,6 +9,27 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
     'Main status = '.$status.', substatus = '.$substatus.', domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Active');
+    $result = $api->request('GET',"/domain/domaindetails", Array('itemid' => $reqid));
+    $domain = $result['items'][$reqid];
+    $expire = substr($domain['renewaldate'],0,10);
+    logModuleCall(
+      'nameSRS',
+      'callback_transfer_success - domain details',
+      $result,
+      $domain
+    );
+    $command  = "UpdateClientDomain";
+    $admin   	= getAdminUser();
+    $dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+    $values   = array();
+    $values["domainid"] = $req['domain_id'];
+    $values["expirydate"] = $expire;
+    $expireDate = new DateTime($expire);
+    $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
+    $values['nextduedate'] = $expireDate->format('Y-m-d');
+    $values['status'] = 'Active';
+    $results 	= localAPI($command, $values, $admin);
+
   // completed - remove from queue
   //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
