@@ -133,7 +133,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
           'Affected rows = ' . $stm->rowCount()
         );
       }
-      if ($status == 200 OR $status == 201)
+      if ($status == 200 OR $status == 201 OR $status == 202)
       {
         $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
         $stm->execute(['stat' => 'Active', 'id' => $domainid]);

@@ -161,7 +161,7 @@ Class RequestSRS
     {
       $this->domainName = $this->params["domainObj"]->getDomain(FALSE);
     }
-    
+
     $domain = DomainCache::get($this->domainName);
     if (is_array($domain)) return $domain;
 
