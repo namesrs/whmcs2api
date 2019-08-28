@@ -161,10 +161,19 @@ Class RequestSRS
     {
       $this->domainName = $this->params["domainObj"]->getDomain(FALSE);
     }
-
+/*
     $domain = DomainCache::get($this->domainName);
-    if (is_array($domain)) return $domain;
-
+    if (is_array($domain))
+      {
+        logModuleCall(
+          'nameSRS',
+          "SearchDomain($domainname)",
+          'Got from session cache',
+          $domain
+        );
+        return $domain;
+      }
+*/
     $result = $pdo->query('SELECT namesrs_id FROM tblnamesrshandles WHERE type = 1 AND whmcs_id = ' . (int)$this->params['domainid']);
     if ($result->rowCount()) $handle = $result->fetch(PDO::FETCH_NUM)[0];
     else
@@ -175,19 +184,31 @@ Class RequestSRS
         $handle = $list['items'][0]['itemID'];
       }
       else throw new Exception('Could not retrieve domain ID from the API');
+      logModuleCall(
+        'nameSRS',
+        "SearchDomain($domainname)",
+        'We asked API for domain ID',
+        $handle
+      );
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
     $domain = $result['items'][$handle];
-    DomainCache::put($domain);
-
+    //DomainCache::put($domain);
+    logModuleCall(
+      'nameSRS',
+      "SearchDomain($domainname)",
+      'We fetched domain details from API',
+      $domain
+    );
     // store the mapping between WHMCS domainID and NameISP domainHandle
+    if($domain['custom_field'] != 0) $this->params['domainid'] = $domain['custom_field'];
     if ($this->params['domainid'] != 0)
       {
         $pdo->query('INSERT INTO tblnamesrshandles(whmcs_id,type,namesrs_id) VALUES(' . $this->params['domainid'] . ',1,' . $handle . ') ON DUPLICATE KEY UPDATE namesrs_id = VALUES(namesrs_id)');
         $expire = substr($domain['renewaldate'],0,10);
         // update status, expiration and next due date
         $command  = "UpdateClientDomain";
-        $admin   	= getAdminUser();
+        //$admin   	= getAdminUser();
         //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
         $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
         $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
@@ -223,7 +244,13 @@ Class RequestSRS
             $statusName = 'Pending';
         }
         if ($statusName != '') $values['status'] = $statusName;
-        $results 	= localAPI($command, $values, $admin);
+        $results 	= localAPI($command, $values/*, $admin*/);
+        logModuleCall(
+          'nameSRS',
+          "SearchDomain($domainname)",
+          "We updated domain status ($statusName), expiration and next due date",
+          $domain
+        );
       }
     return $domain;
   }
