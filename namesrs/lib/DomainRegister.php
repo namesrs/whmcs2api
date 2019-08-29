@@ -178,8 +178,7 @@ function namesrs_RegisterDomain($params)
           if ($orig['orgnr'] < 10000) return ['error' => 'Invalid Organization ID (' . $orig['orgnr'] . ')'];
           if (trim($orig['companyname']) == '')
           {
-            $orig['companyname'] = trim($orig['firstname'] . ' ' . $orig['lastname']);
-            if ($orig['companyname'] == '') return ['error' => 'Company name is required. Please update contact details in profile.'];
+            $orig['companyname'] = 'Företag'; // Comply with GDPR - otherwise the person's name is visible on WHOIS
           }
         }
         else
