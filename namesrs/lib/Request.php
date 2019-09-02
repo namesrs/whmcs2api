@@ -203,56 +203,56 @@ Class RequestSRS
     // store the mapping between WHMCS domainID and NameISP domainHandle
     if($domain['custom_field'] != 0) $this->params['domainid'] = $domain['custom_field'];
     if ($this->params['domainid'] != 0)
-      {
-        $pdo->query('INSERT INTO tblnamesrshandles(whmcs_id,type,namesrs_id) VALUES(' . $this->params['domainid'] . ',1,' . $handle . ') ON DUPLICATE KEY UPDATE namesrs_id = VALUES(namesrs_id)');
-        $expire = substr($domain['renewaldate'],0,10);
-        // update status, expiration and next due date
-        $command  = "UpdateClientDomain";
-        //$admin   	= getAdminUser();
-        //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
-        $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
-        $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
+    {
+      $pdo->query('INSERT INTO tblnamesrshandles(whmcs_id,type,namesrs_id) VALUES(' . $this->params['domainid'] . ',1,' . $handle . ') ON DUPLICATE KEY UPDATE namesrs_id = VALUES(namesrs_id)');
+      $expire = substr($domain['renewaldate'],0,10);
+      // update status, expiration and next due date
+      $command  = "UpdateClientDomain";
+      //$admin   	= getAdminUser();
+      //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+      $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
+      $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
 
-        $values   = array();
-        $values["domainid"] = $this->params['domainid'];
-        $values["expirydate"] = $expire;
-        $expireDate = new DateTime($expire);
-        $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
-        $values['nextduedate'] = $expireDate->format('Y-m-d');
-        $values['regdate'] = substr($domain['created'],0,10);
-        $status_id = key($domain['status']);
-        $statusName = '';
-        switch($status_id)
-        {
-          case 200:
-          case 201:
-            $statusName = 'Active';
-            break;
-          case 300:
-            $statusName = 'Transferred Away';
-            break;
-          case 500:
-          case 503:
-          case 504:
-            $statusName = 'Expired';
-            break;
-          case 2:
-          case 10:
-          case 11:
-          case 400:
-          case 4000:
-          case 4006:
-            $statusName = 'Pending';
-        }
-        if ($statusName != '') $values['status'] = $statusName;
-        localAPI($command, $values/*, $admin*/);
-        logModuleCall(
-          'nameSRS',
-          'SearchDomain('.$this->domainName.')',
-          "We updated domain status ($statusName), expiration and next due date",
-          $domain
-        );
+      $values   = array();
+      $values["domainid"] = $this->params['domainid'];
+      $values["expirydate"] = $expire;
+      $expireDate = new DateTime($expire);
+      $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
+      $values['nextduedate'] = $expireDate->format('Y-m-d');
+      $values['regdate'] = substr($domain['created'],0,10);
+      $status_id = key($domain['status']);
+      $statusName = '';
+      switch($status_id)
+      {
+        case 200:
+        case 201:
+          $statusName = 'Active';
+          break;
+        case 300:
+          $statusName = 'Transferred Away';
+          break;
+        case 500:
+        case 503:
+        case 504:
+          $statusName = 'Expired';
+          break;
+        case 2:
+        case 10:
+        case 11:
+        case 400:
+        case 4000:
+        case 4006:
+          $statusName = 'Pending';
       }
+      if ($statusName != '') $values['status'] = $statusName;
+      localAPI($command, $values/*, $admin*/);
+      logModuleCall(
+        'nameSRS',
+        'SearchDomain('.$this->domainName.')',
+        "We updated domain status ($statusName), expiration and next due date",
+        $values
+      );
+    }
     return $domain;
   }
 
