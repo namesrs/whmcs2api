@@ -9,39 +9,41 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
     'Main status = '.$status.', substatus = '.$substatus.', domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Active');
-  	$api->domainName = $domainname;
-    $domain = $api->searchDomain();
-    $expire = substr($domain['renewaldate'],0,10);
-    logModuleCall(
-      'nameSRS',
-      'callback_register_success - domain details ('.$itemid.')',
-      $result,
-      $domain
-    );
-    $command  = "UpdateClientDomain";
-    $admin   	= getAdminUser();
-    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+  /** @var  $api  RequestSRS */
+  $api->domainName = $domainname;
+  $domain = $api->searchDomain();
+  $expire = substr($domain['renewaldate'],0,10);
+  logModuleCall(
+    'nameSRS',
+    'callback_register_success - domain details ('.$req['domain_id'].')',
+    $domain,
+    ''
+  );
+  $command  = "UpdateClientDomain";
+  $admin   	= getAdminUser();
+  //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
 	$result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
-    $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
+  $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
 
-    $values   = array();
-    $values["domainid"] = $req['domain_id'];
-    $values["expirydate"] = $expire;
-    $expireDate = new DateTime($expire);
-    $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
-    $values['nextduedate'] = $expireDate->format('Y-m-d');
-    $values['status'] = 'Active';
-    $results 	= localAPI($command, $values, $admin);
-    logModuleCall(
-      'nameSRS',
-      'callback_register_success - updated due date',
-      array(
-        'due date safety period' => $dueDateDays,
-        'renewal' => $expire,
-        'next due date' => $values['nextduedate'],
-      ),
-      $domain
-    );
+  $values   = array();
+  $values["domainid"] = $req['domain_id'];
+  $values["expirydate"] = $expire;
+  $expireDate = new DateTime($expire);
+  $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
+  $values['nextduedate'] = $expireDate->format('Y-m-d');
+  $values['regdate'] = substr($domain['created'],0,10);
+  $values['status'] = 'Active';
+  $results 	= localAPI($command, $values, $admin);
+  logModuleCall(
+    'nameSRS',
+    'callback_register_success - updated due date',
+    array(
+      'due date safety period' => $dueDateDays,
+      'renewal' => $expire,
+      'next due date' => $values['nextduedate'],
+    ),
+    $domain
+  );
 
   // completed - remove from queue
   //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);

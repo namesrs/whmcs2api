@@ -150,7 +150,7 @@ Class RequestSRS
   public function searchDomain()
   {
     /**
-     * @var PDO
+     * @var $pdo PDO
      */
     $pdo = Capsule::connection()->getPdo();
     if (is_object($this->params['original']["domainObj"]))
@@ -186,17 +186,17 @@ Class RequestSRS
       else throw new Exception('Could not retrieve domain ID from the API');
       logModuleCall(
         'nameSRS',
-        "SearchDomain($domainname)",
+        'SearchDomain('.$this->domainName.')',
         'We asked API for domain ID',
         $handle
       );
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
     $domain = $result['items'][$handle];
-    //DomainCache::put($domain);
+    DomainCache::put($domain);
     logModuleCall(
       'nameSRS',
-      "SearchDomain($domainname)",
+      'SearchDomain('.$this->domainName.')',
       'We fetched domain details from API',
       $domain
     );
@@ -219,6 +219,7 @@ Class RequestSRS
         $expireDate = new DateTime($expire);
         $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
         $values['nextduedate'] = $expireDate->format('Y-m-d');
+        $values['regdate'] = substr($domain['created'],0,10);
         $status_id = key($domain['status']);
         $statusName = '';
         switch($status_id)
@@ -244,10 +245,10 @@ Class RequestSRS
             $statusName = 'Pending';
         }
         if ($statusName != '') $values['status'] = $statusName;
-        $results 	= localAPI($command, $values/*, $admin*/);
+        localAPI($command, $values/*, $admin*/);
         logModuleCall(
           'nameSRS',
-          "SearchDomain($domainname)",
+          'SearchDomain('.$this->domainName.')',
           "We updated domain status ($statusName), expiration and next due date",
           $domain
         );
@@ -264,7 +265,7 @@ Class RequestSRS
   public function queueRequest($type, $domain_id, $reqid, $json = "")
   {
     /**
-     * @var PDO
+     * @var $pdo PDO
      */
     $pdo = Capsule::connection()->getPdo();
 

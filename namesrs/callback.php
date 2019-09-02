@@ -8,6 +8,7 @@ use WHMCS\Database\Capsule as Capsule;
 
 $old_error_handler = set_error_handler('myErrorHandler', E_ALL & ~E_NOTICE | E_STRICT);
 
+/** @var  $pdo  PDO */
 $pdo = Capsule::connection()->getPdo();
 
 if (in_array($_SERVER['REMOTE_ADDR'], [

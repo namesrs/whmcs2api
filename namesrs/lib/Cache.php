@@ -1,6 +1,6 @@
 <?php
 
-use WHMCS\Database\Capsule as Capsule; 
+use WHMCS\Database\Capsule as Capsule;
 
 /**
  * Class SessionCache
@@ -12,9 +12,9 @@ Class SessionCache
   public static function get($account)
   {
     /**
-     * @var PDO
+     * @var $pdo PDO
      */
-    $pdo = Capsule::connection()->getPdo(); 
+    $pdo = Capsule::connection()->getPdo();
     try
     {
       $stm = $pdo->prepare("select sessionId from mod_namesrssession where account = :acc");
@@ -36,9 +36,9 @@ Class SessionCache
   public static function put($sessionId,$account)
   {
     /**
-     * @var PDO
+     * @var $pdo PDO
      */
-    $pdo = Capsule::connection()->getPdo(); 
+    $pdo = Capsule::connection()->getPdo();
     try
     {
       $stm = $pdo->prepare('INSERT INTO mod_namesrssession (sessionId, account) VALUES(:sess,:acc) ON DUPLICATE KEY UPDATE sessionId = VALUES(sessionId)');
