@@ -1,0 +1,569 @@
+<link rel="stylesheet" href="/modules/addons/namesrs_price/css/styles.css">
+<!--  comment lines at label tags should not be removed in order to keep the design appropriate -->
+<div id="namesrs_success" class="infobox" hidden>
+  <strong>
+    <span class="title">Update successful!</span>
+  </strong>
+  <br>Your pricing list has been updated successfully.
+</div>
+<br>
+
+<div class="steps" data-steps="3">
+  <label>
+    <div>
+      <form method="POST">
+        <input style="border:none;" type="submit" name="submit" value="STEP 1 - FETCH PRICES">
+      </form>
+    </div>
+    <i></i>
+  </label><!--
+  --><label class=labelClass>
+    <span>STEP 2 - IMPORT PRICES</span>
+    <i></i>
+  </label>
+</div>
+<br>
+<iframe id="namesrs_target" name="namesrs_target" style="display: none;"></iframe>
+<form name="namesrs_form" action="addonmodules.php?module=namesrs_price" method="POST" target="namesrs_target" onsubmit="return prepareData();">
+  <input type="hidden" name="pricelist">
+  <h2>Bulk Price update</h2>
+  <span style="font-weight:bold;">Using Factor: </span><input type="number" step="0.001" value="1.000" name="multiplier" min="0">
+  <input type="button" name="cmdMultiply" class="btn btn-primary" value="Multiply" onclick="rebuildTable();">
+
+  <span style="margin-left:40px;font-weight:bold;">Fixed Amount: </span><input type="number" step="0.01" name="fixedamount" min="0" value="0.00">
+  <input type="button" name="cmdFixed" class="btn btn-primary" value="Add" onclick="rebuildTable();">
+  <!--
+  <span style="margin-left:40px;font-weight:bold;">Currency: </span>
+  <select name="tld_currency" onchange="buildTable();">{TLD_CURRENCY}</select>
+  -->
+  <span style="margin-left:40px;font-weight:bold;">Number of TLDs = <strong>{CNT_TLD}</strong></span>
+
+  <br><br>
+
+  <table class="namesrs_price_list">
+    <caption><strong>Sale price = Cost * Multiplier + FixedAmount</strong></caption>
+    <thead>
+      <tr>
+        <th rowspan="2"><input type="checkbox" onclick="checkAll(this);" class="checkall" id="checkall"></th>
+        <th>TLD</th>
+        <th colspan="2">Register</th>
+        <th colspan="2">Renew</th>
+        <th colspan="2">Restore</th>
+        <th colspan="2">Transfer</th>
+      </tr>
+      <tr>
+        <th>&nbsp;</th>
+        <th width="12%">Cost</th>
+        <th width="12%">Sale</th>
+        <th width="12%">Cost</th>
+        <th width="12%">Sale</th>
+        <th width="12%">Cost</th>
+        <th width="12%">Sale</th>
+        <th width="12%">Cost</th>
+        <th width="12%">Sale</th>
+      </tr>
+    </thead>
+
+    <tbody id="tbl_prices">
+      <tr align="center">
+        <td colspan="10">
+          <b style="color:red;">Please wait until we build the list ...</b>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br>
+  <div>
+    <h2>Domain Addons</h2>
+    <div class="form-group">
+      <input type="checkbox" name="dns_management" value="1" checked id="fancy-checkbox-primary-custom-icons">
+      <div class="btn-group">
+        <label for="fancy-checkbox-primary-custom-icons" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span>
+          <span class="glyphicon glyphicon-minus"></span>
+        </label>
+        <label for="fancy-checkbox-primary-custom-icons" class="btn btn-default">
+          DNS Management
+        </label>
+      </div>
+      <label> </label>
+      <input type="checkbox" name="email_forwarding" value="1" checked id="fancy-checkbox-primary-custom-icons1">
+      <div class="btn-group">
+        <label for="fancy-checkbox-primary-custom-icons1" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span>
+          <span class="glyphicon glyphicon-minus"></span>
+        </label>
+        <label for="fancy-checkbox-primary-custom-icons1" class="btn btn-default">
+          Email Forwarding
+        </label>
+      </div>
+      <label> </label>
+      <input type="checkbox" name="id_protection" value="1" checked id="fancy-checkbox-primary-custom-icons2">
+      <div class="btn-group">
+        <label for="fancy-checkbox-primary-custom-icons2" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span>
+          <span class="glyphicon glyphicon-minus"></span>
+        </label>
+        <label for="fancy-checkbox-primary-custom-icons2" class="btn btn-default">
+          ID Protection
+        </label>
+      </div>
+      <label> </label>
+      <input type="checkbox" name="epp_code" value="1" checked id="fancy-checkbox-primary-custom-icons3">
+      <div class="btn-group">
+        <label for="fancy-checkbox-primary-custom-icons3" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span>
+          <span class="glyphicon glyphicon-minus"></span>
+        </label>
+        <label for="fancy-checkbox-primary-custom-icons3" class="btn btn-default">
+          EPP Code
+        </label>
+      </div>
+    </div>
+    <br><br>
+    <input type="submit" name="cmdImport" class="btn btn-primary" value="Import">
+  </div>
+</form>
+
+<script>
+  /*
+    Pricelist is object (TLDs are in Punycode):
+    {
+      TLD_1:
+      {
+        currency: "SEK",
+        price: "123.00",
+        currencies:
+        {
+          EUR:
+          {
+            price: "101.00"
+          },
+          USD:
+          {
+            price: "101.00"
+          }
+        }
+      },
+      ...
+    }
+
+    Currency list is object (the union of the currencies supported by both NameSRS and WHMCS):
+    {
+      EUR: true,
+      USD: true,
+      SEK: true,
+    }
+  */
+  var currency_list = {TLD_CURRENCY};
+  var namesrs_prices = {PRICELIST};
+  var whmcs_prices = {};
+  var pricekey = ['Registration', 'Renew', 'Restore', 'Transfer'];
+  var tbody = document.getElementById('tbl_prices');
+
+  // Highest positive signed 32-bit float value
+  var maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+    // Bootstring parameters
+    base = 36,
+    tMin = 1,
+    tMax = 26,
+    skew = 38,
+    damp = 700,
+    initialBias = 72,
+    initialN = 128, // 0x80
+    delimiter = '-', // '\x2D'
+
+    // Regular expressions
+    regexPunycode = /^xn--/,
+    regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
+
+    // Convenience shortcuts
+    baseMinusTMin = base - tMin,
+    floor = Math.floor,
+
+    // Error messages
+    errors =
+      {
+        'overflow': 'Overflow: input needs wider integers to process',
+        'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+        'invalid-input': 'Invalid input'
+      };
+
+
+  buildTable();
+
+  function rebuildTable()
+  {
+    tbody.innerHTML = '<tr align="center"><td colspan="10"><b style="color:red;">Please wait until we build the list ...</b></td></tr>';
+    setTimeout(buildTable, 2);
+  }
+
+  // build the price table
+  function buildTable()
+  {
+    var multiplier = parseFloat(document.namesrs_form.multiplier.value) || 0;
+    var fixedAmount = parseFloat(document.namesrs_form.fixedamount.value) || 0;
+    var tld, curr, cost, sale, i, uni, cell, html = '';
+
+    whmcs_prices = {};
+    for (tld in namesrs_prices)
+    {
+      uni = toUnicode(tld);
+      whmcs_prices[tld] = {
+        tld: uni
+      };
+      html += '<tr>' +
+        '<td><input type="checkbox" name="' + tld + '" id="' + '.' + tld + '"></td>' +
+        '<td><label for=".' + tld + '">.' + uni + (tld != uni ? '<br><small>.' + tld + '</small>' : '') + '</label></td>';
+      for (i = 0; i < pricekey.length; i++)
+      {
+        cost = namesrs_prices[tld][pricekey[i]];
+        sale = {};
+        if(cost)
+        {
+          html += '<td><div>';
+          cell = [];
+          // append cost
+          if(currency_list[cost.currency])
+          {
+            cell.puch(thousand(Number(cost.price).toFixed(2)) + '\xA0' + cost.currency);
+          }
+          for (curr in cost.currencies)
+          {
+            if(currency_list[curr])
+            {
+              cell.push(thousand(Number(cost.currencies[curr].price).toFixed(2)) + '\xA0' + curr);
+            }
+          }
+          html += cell.join('<br>') + '</div></td><td><div>';
+          // append sale price
+          cell = [];
+          if(currency_list[cost.currency])
+          {
+            sale[cost.currency] = +cost.price * multiplier + fixedAmount;
+            cell.push(thousand(Number(sale[cost.currency]).toFixed(2)) + '\xA0' + cost.currency);
+          }
+          for (curr in cost.currencies)
+          {
+            if(currency_list[curr])
+            {
+              sale[curr] = +cost.currencies[curr].price * multiplier + fixedAmount;
+              cell.push(thousand(Number(sale[curr]).toFixed(2)) + '\xA0' + curr);
+            }
+          }
+          html += cell.join('<br>') + '</div></td>';
+        }
+        else
+        {
+          html += '<td>N/A</td><td>N/A</td>';
+        }
+        whmcs_prices[tld][pricekey[i]] = sale;
+      }
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  function thousand (value, separator = ' ')
+  {
+    return String(value).replace(/([^-])(?=(\d{3})+(\.\d\d)?$)/g, '$1' + separator);
+  }
+
+  function checkAll(ele)
+  {
+    var checkboxes = document.namesrs_form.elements;
+    var i, state = ele.checked;
+
+    for (i = 0; i < checkboxes.length; i++)
+    {
+      if (checkboxes[i].type == "checkbox" && checkboxes[i].id && checkboxes[i].id.substr(0,1) == '.')
+      {
+        checkboxes[i].checked = state;
+      }
+    }
+  }
+
+  function prepareData()
+  {
+    var frm = document.namesrs_form;
+    var checkboxes = frm.elements;
+    var i, chk, selected = false, list = [];
+
+    // hide the success message
+    showSuccess(false);
+
+    for (i = 0; i < checkboxes.length; i++)
+    {
+      chk = checkboxes[i];
+      if (chk.type == "checkbox" && chk.id && chk.id.substr(0,1) == '.' && chk.checked)
+      {
+        selected = true; // at least TLD has been selected
+        if(pricekey.some(function (value)
+        {
+          // at least 1 of Registration/Renew/Restore/Transfer prices in the price list is listed in the same currency as the currently selected one
+          // otherwise we skip the TLD
+          return !!whmcs_prices[chk.name][value];
+        })) list.push(whmcs_prices[chk.name]);
+      }
+    }
+    if(!selected)
+    {
+      alert('Nothing to import - please select at least 1 TLD');
+      return false;
+    }
+    if(list.length == 0)
+    {
+      alert('The selected TLDs do not support any of the currencies defined in WHMCS');
+      return false;
+    }
+
+    frm.pricelist.value = JSON.stringify({
+      prices: list,
+      addons: {
+        dns: frm.dns_management.checked,
+        email: frm.email_forwarding.checked,
+        whois: frm.id_protection.checked,
+        auth: frm.epp_code.checked,
+      }
+    });
+    return true;
+  }
+
+  function showSuccess(show)
+  {
+    var el = document.getElementById('namesrs_success');
+    if(el)
+      {
+        if(show)
+        {
+          el.removeAttribute('hidden');
+          window.scrollTo(0,0);
+        }
+        else el.setAttribute('hidden', 'true');
+      }
+  }
+
+  // ======================== Conversion from Punycode to Unicode
+
+  /**
+   * Converts a Punycode string representing a domain name or an email address
+   * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+   * it doesn't matter if you call it on a string that has already been
+   * converted to Unicode.
+   * @memberOf punycode
+   * @param {String} input The Punycoded domain name or email address to
+   * convert to Unicode.
+   * @returns {String} The Unicode representation of the given Punycode
+   * string.
+   */
+  function toUnicode (input)
+  {
+    return mapDomain(input, function (string)
+    {
+      return regexPunycode.test(string)
+        ? decode(string.slice(4).toLowerCase())
+        : string;
+    });
+  }
+
+  /**
+   * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+   * symbols.
+   * @memberOf punycode
+   * @param {String} input The Punycode string of ASCII-only symbols.
+   * @returns {String} The resulting string of Unicode symbols.
+   */
+  function decode (input)
+  {
+    // Don't use UCS-2.
+    const output = [];
+    const inputLength = input.length;
+    let i = 0;
+    let n = initialN;
+    let bias = initialBias;
+
+    // Handle the basic code points: let `basic` be the number of input code
+    // points before the last delimiter, or `0` if there is none, then copy
+    // the first basic code points to the output.
+
+    let basic = input.lastIndexOf(delimiter);
+    if (basic < 0)
+    {
+      basic = 0;
+    }
+
+    for (let j = 0; j < basic; ++j)
+    {
+      // if it's not a basic code point
+      if (input.charCodeAt(j) >= 0x80)
+      {
+        error('not-basic');
+      }
+      output.push(input.charCodeAt(j));
+    }
+
+    // Main decoding loop: start just after the last delimiter if any basic code
+    // points were copied; start at the beginning otherwise.
+
+    for (let index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */)
+    {
+      // `index` is the index of the next character to be consumed.
+      // Decode a generalized variable-length integer into `delta`,
+      // which gets added to `i`. The overflow checking is easier
+      // if we increase `i` as we go, then subtract off its starting
+      // value at the end to obtain `delta`.
+      let oldi = i;
+      for (let w = 1, k = base; /* no condition */; k += base)
+      {
+        if (index >= inputLength)
+        {
+          error('invalid-input');
+        }
+
+        const digit = basicToDigit(input.charCodeAt(index++));
+
+        if (digit >= base || digit > floor((maxInt - i) / w))
+        {
+          error('overflow');
+        }
+
+        i += digit * w;
+        const t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+        if (digit < t)
+        {
+          break;
+        }
+
+        const baseMinusT = base - t;
+        if (w > floor(maxInt / baseMinusT))
+        {
+          error('overflow');
+        }
+
+        w *= baseMinusT;
+      }
+
+      const out = output.length + 1;
+      bias = adapt(i - oldi, out, oldi == 0);
+
+      // `i` was supposed to wrap around from `out` to `0`,
+      // incrementing `n` each time, so we'll fix that now:
+      if (floor(i / out) > maxInt - n)
+      {
+        error('overflow');
+      }
+
+      n += floor(i / out);
+      i %= out;
+
+      // Insert `n` at position `i` of the output.
+      output.splice(i++, 0, n);
+    }
+
+    return String.fromCodePoint(...output);
+  }
+
+  /**
+   * Bias adaptation function as per section 3.4 of RFC 3492.
+   * https://tools.ietf.org/html/rfc3492#section-3.4
+   * @private
+   */
+  function adapt (delta, numPoints, firstTime)
+  {
+    let k = 0;
+    delta = firstTime ? floor(delta / damp) : delta >> 1;
+    delta += floor(delta / numPoints);
+    for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base)
+    {
+      delta = floor(delta / baseMinusTMin);
+    }
+    return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+  }
+
+  /**
+   * Converts a basic code point into a digit/integer.
+   * @see `digitToBasic()`
+   * @private
+   * @param {Number} codePoint The basic numeric code point value.
+   * @returns {Number} The numeric value of a basic code point (for use in
+   * representing integers) in the range `0` to `base - 1`, or `base` if
+   * the code point does not represent a value.
+   */
+  function basicToDigit (codePoint)
+  {
+    if (codePoint - 0x30 < 0x0A)
+    {
+      return codePoint - 0x16;
+    }
+    if (codePoint - 0x41 < 0x1A)
+    {
+      return codePoint - 0x41;
+    }
+    if (codePoint - 0x61 < 0x1A)
+    {
+      return codePoint - 0x61;
+    }
+    return base;
+  }
+
+  /**
+   * A simple `Array#map`-like wrapper to work with domain name strings or email
+   * addresses.
+   * @private
+   * @param {String} domain The domain name or email address.
+   * @param {Function} callback The function that gets called for every
+   * character.
+   * @returns {Array} A new string of characters returned by the callback
+   * function.
+   */
+  function mapDomain (string, fn)
+  {
+    const parts = string.split('@');
+    let result = '';
+    if (parts.length > 1)
+    {
+      // In email addresses, only the domain name should be punycoded. Leave
+      // the local part (i.e. everything up to `@`) intact.
+      result = parts[0] + '@';
+      string = parts[1];
+    }
+    // Avoid `split(regex)` for IE8 compatibility. See #17.
+    string = string.replace(regexSeparators, '\x2E');
+    const labels = string.split('.');
+    const encoded = map(labels, fn).join('.');
+    return result + encoded;
+  }
+
+  /**
+   * A generic `Array#map` utility function.
+   * @private
+   * @param {Array} array The array to iterate over.
+   * @param {Function} callback The function that gets called for every array
+   * item.
+   * @returns {Array} A new array of values returned by the callback function.
+   */
+  function map (array, fn)
+  {
+    const result = [];
+    let length = array.length;
+    while (length--)
+    {
+      result[length] = fn(array[length]);
+    }
+    return result;
+  }
+
+  /**
+   * A generic error utility function.
+   * @private
+   * @param {String} type The error type.
+   * @returns {Error} Throws a `RangeError` with the applicable error message.
+   */
+  function error (type)
+  {
+    throw new RangeError(errors[type]);
+  }
+</script>

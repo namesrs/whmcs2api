@@ -15,16 +15,10 @@ if($status == 2000)
   	$api->domainName = $domainname;
     $domain = $api->searchDomain();
     $expire = substr($domain['renewaldate'],0,10);
-    logModuleCall(
-      'nameSRS',
-      'callback_transfer_success - domain details',
-      $domain,
-      ''
-    );
 
     $command  = "UpdateClientDomain";
     $admin   	= getAdminUser();
-    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin); -- does not work reliably
   	$result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
     $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
 
@@ -47,8 +41,6 @@ if($status == 2000)
       ),
       $domain
     );
-    // completed - remove from the queue
-    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
   elseif($substatus == 2004 OR $substatus == 4998)
   {
@@ -60,8 +52,6 @@ if($status == 2000)
       'Main status = 2000, substatus = '.$substatus.', domain = '.$req['domain']
     );
     domainStatus($req['domain_id'], 'Cancelled');
-    // remote from the queue
-    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
   else
   {
@@ -89,8 +79,6 @@ elseif($status == 300)
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Transferred Away');
-  // remove from the queue
-  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 else
 {

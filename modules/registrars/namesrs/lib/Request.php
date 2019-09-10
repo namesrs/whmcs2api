@@ -22,6 +22,7 @@ Class RequestSRS
     $this->params = $params;
     if (is_object($params['original']["domainObj"])) $this->domainName = $params['original']["domainObj"]->getDomain(TRUE);
     elseif (is_object($params["domainObj"])) $this->domainName = $params["domainObj"]->getDomain(TRUE);
+    else $this->domainName = $params['domainname'];
     if ($this->params["API_key"]) $this->account = trim($this->params["API_key"]);
     if ($this->params["Base_URL"]) $this->base_url = trim($this->params["Base_URL"]);
     if ($this->account == '') throw new Exception('Missing API key');
@@ -257,7 +258,7 @@ Class RequestSRS
   }
 
   /**
-   * @param int $type - 2 (renew domain), 3 (transfer domain), 4 (register domain)
+   * @param int $type - 2 (renew domain), 3 (transfer domain), 4 (register domain), 5 (change owner)
    * @param int $domain_id - WHMCS domainID
    * @param int $reqid - ID of the API request in NameSRS
    * @param string $json - only used when registering a domain, to store NameServers

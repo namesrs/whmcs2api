@@ -13,15 +13,9 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
   $api->domainName = $domainname;
   $domain = $api->searchDomain();
   $expire = substr($domain['renewaldate'],0,10);
-  logModuleCall(
-    'nameSRS',
-    'callback_register_success - domain details ('.$req['domain_id'].')',
-    $domain,
-    ''
-  );
   $command  = "UpdateClientDomain";
   $admin   	= getAdminUser();
-  //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+  //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin); -- does not work reliably
 	$result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
   $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
 
@@ -38,15 +32,13 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
     'nameSRS',
     'callback_register_success - updated due date',
     array(
+      'domain_id' => $req['domain_id'],
       'due date safety period' => $dueDateDays,
       'renewal' => $expire,
       'next due date' => $values['nextduedate'],
     ),
     $domain
   );
-
-  // completed - remove from queue
-  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif(in_array((int)$status, Array(2,10,11,4000)))
 {
@@ -59,9 +51,9 @@ elseif(in_array((int)$status, Array(2,10,11,4000)))
   );
   domainStatus($req['domain_id'], 'Pending');
 }
-elseif($status == 201 OR $status == 500)
+elseif($status == 500)
 {
-  // expired or expiring (201)
+  // expired
   logModuleCall(
     'nameSRS',
     'callback_register_expired',
@@ -69,8 +61,6 @@ elseif($status == 201 OR $status == 500)
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Expired');
-  // remove from the queue
-  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif($status == 300)
 {
@@ -82,8 +72,6 @@ elseif($status == 300)
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Transferred Away');
-  // remove from the queue
-  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 }
 elseif($status == 2000 AND ($substatus == 4998 OR $substatus == 4999))
 {
@@ -94,8 +82,6 @@ elseif($status == 2000 AND ($substatus == 4998 OR $substatus == 4999))
     $json,
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
-  // remove from the queue
-  //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
 
   domainStatus($req['domain_id'], 'Cancelled');
   emailAdmin("NameSRS Status", array(

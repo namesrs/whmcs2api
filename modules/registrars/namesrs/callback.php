@@ -120,8 +120,9 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
       else $substatus = '';
       if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
       else $substatus_name = 'Unknown substatus';
+      // update the expiration date and next due date
       $expire = substr($json['renewaldate'], 0, 10);
-      if ($expire != '' AND preg_match('/\d{4}-\d{2}-\d{2}/', $expire))
+      if ($expire != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $expire))
       {
         $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = DATE_SUB(:exp2,INTERVAL (
           SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1
@@ -134,6 +135,20 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
           'Affected rows = ' . $stm->rowCount()
         );
       }
+      // update the registration date
+      $regdate = substr($json['created'],0,10);
+      if($regdate != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $regdate))
+      {
+        $stm = $pdo->prepare('UPDATE tbldomains SET registrationdate = :regdate WHERE registrar = "namesrs" AND id = :id');
+        $stm->execute(['regdate' => $regdate, 'id' => $domainid]);
+        logModuleCall(
+          'nameSRS',
+          "Updated registration date for " . $domainname,
+          $json['objectname'],
+          'Affected rows = ' . $stm->rowCount()
+        );
+      }
+      // Domain is ACTIVE
       if ($status == 200 OR $status == 201 OR $status == 202)
       {
         $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
@@ -145,6 +160,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
           'Affected rows = ' . $stm->rowCount()
         );
       }
+      // Domain is TRANSFERRED AWAY
 			elseif ($status == 300)
       {
         $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
@@ -156,10 +172,22 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
           'Affected rows = ' . $stm->rowCount()
         );
       }
+      // Domain is EXPIRED
 			elseif (in_array((int)$status, [500, 503, 504]))
       {
+        switch($status)
+        {
+          case 503:
+            $statName = 'Redemption';
+            break;
+          case 504:
+            $statName = 'Grace';
+            break;
+          default:
+            $statName = 'Expired';
+        }
         $stm = $pdo->prepare('UPDATE tbldomains SET status = :stat WHERE registrar = "namesrs" AND id = :id');
-        $stm->execute(['stat' => 'Expired', 'id' => $domainid]);
+        $stm->execute(['stat' => $statName, 'id' => $domainid]);
         logModuleCall(
           'nameSRS',
           "Setting status to EXPIRED for " . $domainname,
@@ -326,6 +354,5 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
   echo $s;
   die;
 }
-
 
 ?>

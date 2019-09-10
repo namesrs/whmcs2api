@@ -1,0 +1,209 @@
+.steps
+{
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.steps label
+{
+  list-style-type: none;
+  display: inline-block;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  line-height: 30px;
+  height: 30px;
+  background-color: #F0F0F0;
+}
+
+.steps[data-steps="3"] label
+{
+  width: 20%;
+}
+
+.steps label > span
+{
+  display: block;
+  color: #999999;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.steps label.labelClass > span
+{
+  color: #FFFFFF;
+  background-color: #337AB7;
+  border-color: #2E6DA4;
+}
+
+.steps label > span:after,
+.steps label > span:before
+{
+  content: "";
+  display: block;
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 15px solid transparent;
+  border-left-color: #F0F0F0;
+}
+
+.steps label > span:after
+{
+  top: -5px;
+  z-index: 1;
+  border-left-color: white;
+  border-width: 20px;
+}
+
+.steps label > span:before
+{
+  z-index: 2;
+}
+
+.steps label.labelClass + label > span:before
+{
+  border-left-color: #337AB7;
+}
+
+.steps label:first-child > span:after, .steps label:first-child > span:before
+{
+  display: none;
+}
+
+.steps label:first-child i,
+.steps label:last-child i
+{
+  display: block;
+  height: 0;
+  width: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 16px solid transparent;
+  border-left-color: white;
+}
+
+.steps label:last-child i
+{
+  left: auto;
+  right: -15px;
+  border-color: white white white transparent;
+}
+
+table
+{
+  border-collapse: collapse;
+}
+
+th
+{
+  /* this part - no lines appear for th elements */
+  background-color: #CCCCCC;
+  text-align: center;
+}
+
+th
+{
+  color: #FFFFFF;
+  background-color: #337AB7;
+  border-color: #2E6DA4;
+}
+
+th, td
+{
+  border: 1px solid #CCCCCC;
+  padding: 8px;
+}
+
+tr:nth-child(even)
+{
+  background: #EFEFEF;
+}
+
+tr:hover
+{
+  background: #D1D1D1;
+}
+
+.namesrs_price_list label
+{
+  cursor: pointer;
+}
+
+.namesrs_price_list tr
+{
+  text-align: center;
+}
+
+#tbl_prices div
+{
+  display: inline-block;
+  text-align: right;
+}
+
+.container_step1
+{
+  margin-top: 24px;
+}
+
+.container_step1 div
+{
+  display: inline;
+  float: left;
+  width: 328px;
+  background: #F6F6F6;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  height: 170px;
+  margin-left: 5px;
+  border-left: 5px #CCCCCC solid;
+}
+
+h2
+{
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #337AB7;
+  margin-bottom: 10px;
+}
+
+.sale1
+{
+  font-weight: bold;
+}
+
+.form-group input[type="checkbox"]
+{
+  display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span
+{
+  width: 20px;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:first-child
+{
+  display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:last-child
+{
+  display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child
+{
+  display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child
+{
+  display: none;
+}

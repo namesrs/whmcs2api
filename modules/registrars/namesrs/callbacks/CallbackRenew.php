@@ -40,7 +40,7 @@ if($status == 2000)
 
     $command  = "UpdateClientDomain";
     $admin  	= getAdminUser();
-    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
+    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin); -- does not work reliably
 	  $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
     $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
 
@@ -63,8 +63,6 @@ if($status == 2000)
       ),
       $domain
     );
-    // remove from the queue
-    //$pdo->query('DELETE FROM tblnamesrsjobs WHERE id = '.(int)$req['id']);
   }
 }
 else

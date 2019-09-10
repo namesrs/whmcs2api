@@ -8,6 +8,7 @@
 
 use WHMCS\Database\Capsule as Capsule;
 
+/** @var  $pdo PDO */
 $pdo = Capsule::connection()->getPdo();
 define('API_HOST',"api.domainname.systems");
 
@@ -19,6 +20,9 @@ function namesrs_getConfigArray()
 	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameISP's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
 	);
+	if($_SERVER['HTTP_HOST'] == 'whmcs.nameisp.com') $configarray['Test_mode'] = array(
+    "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
+  );
 	return $configarray;
 }
 
@@ -35,13 +39,13 @@ function namesrs_getConfigArray()
 function namesrs_ClientAreaCustomButtonArray($params)
 {
   /**
-   * @var PDO
+   * @var $pdo PDO
    */
   $pdo = Capsule::connection()->getPdo();
 
   $buttonarray = array(
 	 "Set E-mail forwarding" => "setEmailForwarding",
-	 "Contact details" => "setContactDetails"
+	 "Registrant details" => "setContactDetails"
 	);
 	if ( isset($params["domainid"]) ) $domainid = $params["domainid"];
   else if ( !isset($_REQUEST["id"]) )
@@ -72,7 +76,7 @@ function namesrs_ClientAreaCustomButtonArray($params)
 	return $buttonarray;
 }
 
-require_once("lib/Request.php");
+require_once "lib/Request.php";
 require_once "lib/NameServers.php";
 require_once "lib/DNSrecords.php";
 require_once "lib/DNSSEC.php";
@@ -82,7 +86,7 @@ require_once "lib/Lock.php";
 require_once "lib/DomainRegister.php";
 require_once "lib/DomainTransfer.php";
 require_once "lib/DomainRenew.php";
-require_once("lib/Search.php");
+require_once "lib/Search.php";
 
 function namesrs_GetEPPCode($params)
 {
@@ -125,4 +129,5 @@ function namesrs_DeleteNameserver($params)
   return Array('error' => 'Not supported');
 }
 
-?>
+include dirname(__FILE__).'/install.php';
+
