@@ -8,37 +8,16 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
     $json,
     'Main status = '.$status.', substatus = '.$substatus.', domain = '.$req['domain']
   );
-  domainStatus($req['domain_id'], 'Active');
   /** @var  $api  RequestSRS */
   $api->domainName = $domainname;
-  $domain = $api->searchDomain();
-  $expire = substr($domain['renewaldate'],0,10);
+  $domain = $api->searchDomain(); // it will update expiration date, next due date and registration date
+
   $command  = "UpdateClientDomain";
   $admin   	= getAdminUser();
-  //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin); -- does not work reliably
-	$result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
-  $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
-
   $values   = array();
   $values["domainid"] = $req['domain_id'];
-  $values["expirydate"] = $expire;
-  $expireDate = new DateTime($expire);
-  $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
-  $values['nextduedate'] = $expireDate->format('Y-m-d');
-  $values['regdate'] = substr($domain['created'],0,10);
   $values['status'] = 'Active';
   $results 	= localAPI($command, $values, $admin);
-  logModuleCall(
-    'nameSRS',
-    'callback_register_success - updated due date',
-    array(
-      'domain_id' => $req['domain_id'],
-      'due date safety period' => $dueDateDays,
-      'renewal' => $expire,
-      'next due date' => $values['nextduedate'],
-    ),
-    $domain
-  );
 }
 elseif(in_array((int)$status, Array(2,10,11,4000)))
 {
@@ -49,9 +28,9 @@ elseif(in_array((int)$status, Array(2,10,11,4000)))
     $json,
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
-  domainStatus($req['domain_id'], 'Pending');
+  domainStatus($req['domain_id'], 'Pending Registration');
 }
-elseif($status == 500)
+elseif($status == 500 OR $status == 503 OR $status == 504)
 {
   // expired
   logModuleCall(
@@ -60,7 +39,18 @@ elseif($status == 500)
     $json,
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
-  domainStatus($req['domain_id'], 'Expired');
+  switch($status)
+  {
+    case 503:
+      $statName = 'Redemption';
+      break;
+    case 504:
+      $statName = 'Grace';
+      break;
+    default:
+      $statName = 'Expired'; 
+  }
+  domainStatus($req['domain_id'], $statName);
 }
 elseif($status == 300)
 {
@@ -101,7 +91,7 @@ elseif($status == 4006 OR $status == 400 OR $status == 0)
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
 
-  domainStatus($req['domain_id'], 'Pending');
+  domainStatus($req['domain_id'], 'Pending Registration');
   emailAdmin("NameSRS Status", array(
     'domain_name' => $req['domain'],
     'orderType' => 'Domain Registration',

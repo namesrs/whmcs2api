@@ -29,40 +29,14 @@ if($status == 2000)
 
     /** @var  $api  RequestSRS */
     $api->domainName = $domainname;
-    $domain = $api->searchDomain();
-    $expire = substr($domain['renewaldate'],0,10);
-    logModuleCall(
-      'nameSRS',
-      'callback_renewal_success - domain details',
-      $domain.
-      ''
-    );
+    $domain = $api->searchDomain(); // it will update expiration date, next due date and registration date
 
-    $command  = "UpdateClientDomain";
-    $admin  	= getAdminUser();
-    //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin); -- does not work reliably
-	  $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
-    $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
-
+    $command = "UpdateClientDomain";
+    $admin = getAdminUser();
     $values = array();
     $values["domainid"] = $req['domain_id'];
-    $values["expirydate"] = $expire;
-    $expireDate = new DateTime($expire);
-    $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
-    $values['nextduedate'] = $expireDate->format('Y-m-d');
-    $values['regdate'] = substr($domain['created'],0,10);
     $values['status'] = 'Active';
     localAPI($command, $values, $admin);
-    logModuleCall(
-      'nameSRS',
-      'callback_renew_success - updated due date',
-      array(
-        'due date safety period' => $dueDateDays,
-        'renewal' => $expire,
-        'next due date' => $values['nextduedate'],
-      ),
-      $domain
-    );
   }
 }
 else
