@@ -80,7 +80,7 @@ The bulk import is performed in 3 steps:
 
 -----
 
-# 3. WHMCS provisioning module - to handle registrant (domain owner) change
+## 3. WHMCS provisioning module - to handle registrant (domain owner) change
 
 ## This module uses a custom product ("Change registrant") to take into account the charge/fee for registrant changes (enforced by some TLDs) when using the NameISP domain registrar
 
@@ -102,7 +102,7 @@ The bulk import is performed in 3 steps:
 
 ### Principle of operation
 
-WHMCS only recognizes 3 possible actions on domains - `registration`, `renewal` and `transfer`. However, there are some registries which charge a fee when you want to change the domain owner (registrant).
+WHMCS recognizes only **3** possible actions on domains - `registration`, `renewal` and `transfer`. However, there are some registries which charge a fee when you want to change the domain owner (registrant).
 We need to put something in the order so that we are able to charge the customer. This is achieved by using a custom product (ours is called **Change registrant**).
 The NameSRS registrar module already provides a custom screen for changing the registrant details - once the customer saves the changes, our custom product will be added to the cart and the customer will be redirected to the checkout screen.
 Once the order/invoice is marked as paid, WHMCS will call our provisioning module (the one you have just installed) - it will read the registrant details from the order and call the NameSRS API to change the registrant.
