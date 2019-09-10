@@ -32,6 +32,8 @@ The installation script makes the following modifications:
 
 Most of the API endpoints provide an immediate result (e.g. updating name servers or contact information). However, registration/transfer/renewal operations are  asynchronous by nature so the module puts such requests in a queue and expects the API to call a web hook (`/var/www/whmcs/modules/registrars/namesrs/callback.php`) when the requested operation has been performed. You should provide the URL of the `callback.php` script (how it can be reached from the public Internet) when applying for an API key from NameSRS.
 
+### To get an idea how the callbacks work - take a look at the [callback flow chart](https://github.com/nameisp/whmcs/raw/master/callback_flow.png)
+
 ### Configuring the plugin
 
 ![](https://github.com/nameisp/whmcs/raw/master/configuration.png)
