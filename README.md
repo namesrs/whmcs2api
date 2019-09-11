@@ -34,6 +34,8 @@ Most of the API endpoints provide an immediate result (e.g. updating name server
 
 ### To get an idea how the callbacks work - take a look at the [callback flow chart](https://github.com/nameisp/whmcs/raw/master/callback_flow.png)
 
+### The principle of operation of the module is illustrated on [its flowchart](https://github.com/nameisp/whmcs/raw/master/registrar_flow.png)
+
 ### Configuring the plugin
 
 ![](https://github.com/nameisp/whmcs/raw/master/configuration.png)
