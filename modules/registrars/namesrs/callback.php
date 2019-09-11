@@ -226,7 +226,7 @@ catch (Exception $e)
     $e->getMessage(),
     $e->getTrace()
   );
-  echo $e->getMessage(), "\n\n", $e->getTrace();
+  echo $e->getMessage(), "\n\n", $e->getTraceAsString();
 }
 
 function domainStatus($domain_id, $status)
