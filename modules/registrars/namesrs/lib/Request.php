@@ -233,9 +233,13 @@ Class RequestSRS
           $statusName = 'Transferred Away';
           break;
         case 500:
-        case 503:
-        case 504:
           $statusName = 'Expired';
+          break;
+        case 503:
+          $statusName = 'Redemption'; 
+          break;
+        case 504:
+          $statusName = 'Grace';
           break;
         case 2:
         case 10:

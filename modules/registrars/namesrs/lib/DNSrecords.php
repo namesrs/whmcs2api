@@ -206,7 +206,7 @@ function namesrs_setEmailForwarding($params)
       // add new record
       $new_from = preg_replace('/@[^@]*$/','', trim($_REQUEST['new_from']));
       $new_to = trim($_REQUEST['new_to']);
-      if($new_from!='' AND preg_match('/[^@]+@[^@]+/', $new_to))
+      if($new_from!='' AND preg_match('/^[^@]+@[^@]+$/', $new_to))
       {
         $record = Array(
           'domainname' => $api->domainName,
