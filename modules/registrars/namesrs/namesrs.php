@@ -12,17 +12,10 @@ use WHMCS\Database\Capsule as Capsule;
 $pdo = Capsule::connection()->getPdo();
 define('API_HOST',"api.domainname.systems");
 
-function namesrs_MetaData()
-{
-  return array(
-    'DisplayName' => 'NameSRS - v'.VERSION.' ('.STAMP.')',
-  );
-}
-
 function namesrs_getConfigArray()
 {
 	$configarray = array(
-	  //"Description" => array("Type" => "System", "Value" => "Version ".VERSION),
+	  "Description" => array("Type" => "System", "Value" => "version ".VERSION.' ('.STAMP.')'),
 	  "API_key" => array( "Type" => "text", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
 	  "Base_URL" => array( "Type" => "text", "Size" => "25", "Default" => API_HOST, "Description" => "Hostname for API endpoints", "FriendlyName" => "Base URL"),
 	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameISP's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
