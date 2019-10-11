@@ -5,7 +5,7 @@
 * Author: www.nameisp.com - support@nameisp.com
 *
 */
-
+include __DIR__."/version.php";
 use WHMCS\Database\Capsule as Capsule;
 use WHMCS\Domains\Domain as DomPuny;
 
@@ -14,7 +14,7 @@ if (!defined("WHMCS")) die("This file cannot be accessed directly");
 function namesrsowner_MetaData()
 {
   return array(
-    'DisplayName' => 'NameSRS Registrant Change Module',
+    'DisplayName' => 'NameSRS Registrant Change Module v'.VERSION.' ('.STAMP.')',
   );
 }
 
