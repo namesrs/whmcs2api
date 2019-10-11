@@ -1,19 +1,17 @@
 <?php
 
+include __DIR__."/version.php";
 use WHMCS\Database\Capsule;
 // use WHMCS\Domains\Domain as DomPuny;
 
 session_start();
-$module_version = "1.0.1";
 
 function namesrs_price_config()
 {
-  global $module_version;
-
   $configarray = [
     "name" => "NameSRS Prices Importer",
     "description" => "Quickly update your WHMCS domain pricing list from NameSRS.",
-    "version" => $module_version,
+    "version" => VERSION.' - '.STAMP,
     "author" => "NameSRS",
     "language" => "english",
     "fields" => [
