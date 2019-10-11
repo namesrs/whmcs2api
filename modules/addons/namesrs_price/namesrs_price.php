@@ -10,8 +10,8 @@ function namesrs_price_config()
 {
   $configarray = [
     "name" => "NameSRS Prices Importer",
-    "description" => "Quickly update your WHMCS domain pricing list from NameSRS.",
-    "version" => VERSION.' - '.STAMP,
+    "description" => "Quickly update your WHMCS domain pricing list from NameSRS - version ".VERSION.' ('.STAMP.')',
+    "version" => VERSION.'.0',
     "author" => "NameSRS",
     "language" => "english",
     "fields" => [
