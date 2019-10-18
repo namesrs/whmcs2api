@@ -1,1 +1,1 @@
-<?php define('VERSION',26); define('STAMP','2019-10-17, 13:34'); 
+<?php define('VERSION',27); define('STAMP','2019-10-18, 10:41'); 

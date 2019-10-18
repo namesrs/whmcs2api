@@ -14,6 +14,7 @@ $pdo = Capsule::connection()->getPdo();
 
 if (in_array($_SERVER['REMOTE_ADDR'], [
     '91.237.66.70',
+    '78.90.165.87',
   ]) OR php_sapi_name() == 'cli') try
 {
   $payload = file_get_contents('php://input');
@@ -100,6 +101,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     else
     {
       header('HTTP/1.1 400 Missing object name', TRUE, 400);
+      echo 'Missing object name';
       logModuleCall(
         'nameSRS',
         "Missing domain ID - request " . $json['reqid'],
@@ -200,6 +202,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     else
     {
       header('HTTP/1.1 400 Missing custom_field', TRUE, 400);
+      echo 'Missing custom_field';
       logModuleCall(
         'nameSRS',
         "Missing domain ID - " . $json['objectname'],
