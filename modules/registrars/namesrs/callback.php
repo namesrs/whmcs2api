@@ -3,9 +3,10 @@
 require_once "../../../init.php";
 require_once "../../../includes/registrarfunctions.php";
 require_once "lib/Request.php";
-include __DIR__."/version.php"; 
+include __DIR__."/version.php";
 
 use WHMCS\Database\Capsule as Capsule;
+use WHMCS\Domains\Domain as DomPuny;
 
 $old_error_handler = set_error_handler('myErrorHandler', E_ALL & ~E_NOTICE | E_STRICT);
 header('X-WHMCS: '.VERSION.', '.STAMP);
@@ -104,7 +105,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
       echo 'Missing object name';
       logModuleCall(
         'nameSRS',
-        "Missing domain ID - request " . $json['reqid'],
+        "Missing object name",
         $json,
         ''
       );
@@ -113,8 +114,43 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
 	elseif ($json['template'] == 'ITEM_UPDATE')
   {
     $domainid = (int)$json['itemdetails']['custom_field'];
+    if ($domainid == 0)
+    {
+      $domainObj = new DomPuny($json['objectname']);
+      $domainname = $domainObj->getDomain(FALSE); // get UTF-8
+      // find the most recent domain with this name
+      $stm = $pdo->prepare('SELECT id,status FROM tbldomains WHERE registrar = "namesrs" AND domain = :name ORDER BY id DESC');
+      $stm->execute(['name' => $domainname]);
+      $cnt = $stm->rowCount();
+      while($row = $stm->fetch(PDO::FETCH_ASSOC))
+      {
+        if($row['status'] != 'Fraud' AND $row['status'] != 'Cancelled')
+        {
+          $domainid = $row['id'];
+          break;
+        }
+      }
+      if($domainid == 0)
+      {
+        if($cnt == 0) $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was not found';
+        else $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was found but status was not PENDING';
+        header('HTTP/1.1 400 '.$msg, TRUE, 400);
+        echo $msg;
+        logModuleCall(
+          'nameSRS',
+          $msg,
+          $json,
+          ''
+        );
+        die;
+      }
+    }
     if ($domainid != 0)
     {
+      // mark all other domains with this name Cancelled
+      $stm = $pdo->prepare('UPDATE tbldomains SET status = "Cancelled" WHERE registrar = "namesrs" AND id <> :id AND domain = :name');
+      $stm->execute(['id' => $domainid, 'name' => $domainname]);
+
       if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
       else $status = '';
       if ($status != '') $status_name = $json['status']['mainstatus'][$status];
