@@ -1,3 +1,3 @@
 #!d:/program/git/usr/bin/sh.exe
 php -f bump.php
-git add -u version modules/addons/namesrs_price/version.php modules/registrars/namesrs/version.php modules/servers/namesrsowner/version.php
+git add -u version README.md modules/addons/namesrs_price/version.php modules/registrars/namesrs/version.php modules/servers/namesrsowner/version.php
