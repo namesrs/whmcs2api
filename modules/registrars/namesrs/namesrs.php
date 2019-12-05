@@ -130,5 +130,4 @@ function namesrs_DeleteNameserver($params)
   return Array('error' => 'Not supported');
 }
 
-include dirname(__FILE__).'/install.php';
-
+if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

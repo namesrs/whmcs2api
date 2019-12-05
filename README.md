@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 36 (20 Oct 2019, 13:33)
+# WHMCS modules from NameSRS - version 37 (05 Dec 2019, 15:38)
 
 ## 1. WHMCS registrar module
 
