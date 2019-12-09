@@ -22,8 +22,8 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
   $json = json_decode($payload, TRUE);
   if (!(is_array($json) AND count($json) > 0))
   {
-    header('HTTP/1.1 400 Empty payload', TRUE, 400);
-    echo 'Empty payload';
+    //header('HTTP/1.1 400 Empty payload', TRUE, 400);
+    echo '{"code": 1, "messages":"Empty payload"}';
     $headers = [];
     foreach ($_SERVER as $name => $value)
     {
@@ -101,8 +101,8 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     }
     else
     {
-      header('HTTP/1.1 400 Missing object name', TRUE, 400);
-      echo 'Missing object name';
+      //header('HTTP/1.1 400 Missing object name', TRUE, 400);
+      echo '{"code": 2, "message":"Missing object name"}';
       logModuleCall(
         'nameSRS',
         "Missing object name",
@@ -134,8 +134,8 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
       {
         if($cnt == 0) $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was not found';
         else $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was found but status was not PENDING';
-        header('HTTP/1.1 400 '.$msg, TRUE, 400);
-        echo $msg;
+        //header('HTTP/1.1 400 '.$msg, TRUE, 400);
+        echo '{"code": 3, "message":'.json_encode($msg).'}';
         logModuleCall(
           'nameSRS',
           $msg,
@@ -237,8 +237,8 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     }
     else
     {
-      header('HTTP/1.1 400 Missing custom_field', TRUE, 400);
-      echo 'Missing custom_field';
+      //header('HTTP/1.1 400 Missing custom_field', TRUE, 400);
+      echo '{"code": 4, "message": "Missing custom_field"}';
       logModuleCall(
         'nameSRS',
         "Missing domain ID - " . $json['objectname'],
@@ -259,14 +259,14 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
 }
 catch (Exception $e)
 {
-  header('HTTP/1.1 500 Error in callback', TRUE, 500);
+  //header('HTTP/1.1 500 Error in callback', TRUE, 500);
   logModuleCall(
     'nameSRS',
     "Error processing callback",
     $e->getMessage(),
     $e->getTrace()
   );
-  echo $e->getMessage(), "\n\n", $e->getTraceAsString();
+  echo '{"code": 5, "message": '.json_encode($e->getMessage()).'}';
 }
 
 function domainStatus($domain_id, $status)
@@ -309,7 +309,7 @@ function namesrs_log($x)
 
 function myErrorHandler($errno, $errstr, $errfile, $errline)
 {
-  header('HTTP/1.1 500 Error in callback', TRUE, 500);
+  //header('HTTP/1.1 500 Error in callback', TRUE, 500);
   // Only handle the errors specified by the error_reporting directive or function
   // Ensure that we should be displaying and/or logging errors
   //if ( ! ($errno & error_reporting ()) || ! (ini_get ('display_errors') || ini_get ('log_errors'))) return;
