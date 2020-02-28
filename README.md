@@ -1,5 +1,22 @@
-# WHMCS modules from NameSRS - version 39 (20 Jan 2020, 11:05)
+# WHMCS modules from NameSRS - version 40 (28 Feb 2020, 20:02)
+-----
+# NOTE 1
+```
+Once you have a reseller account with Name SRS you can request for the API key and base url needed for this module
+```
 
+# NOTE 2
+```
+After module installation you need to give the callback url to Name SRS for enabling the webhook
+```
+
+# NOTE 3
+```
+In case you used a third party module to handle domains managed by Name SRS, then you need to send a list of those domains including two columns. 
+One with the WHMCS ID's and the other with the domain names. Name SRS will then import those to ensure the callbacks works optimal for you.
+```
+
+-----
 ## 1. WHMCS registrar module
 
 ### Requirements
