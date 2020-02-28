@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 40 (28 Feb 2020, 20:02)
+# WHMCS modules from NameSRS - version 41 (28 Feb 2020, 20:04)
 -----
 # NOTE 1
 ```
@@ -12,8 +12,10 @@ After module installation you need to give the callback url to Name SRS for enab
 
 # NOTE 3
 ```
-In case you used a third party module to handle domains managed by Name SRS, then you need to send a list of those domains including two columns. 
-One with the WHMCS ID's and the other with the domain names. Name SRS will then import those to ensure the callbacks works optimal for you.
+In case you used a third party module to handle domains managed by Name SRS, 
+then you need to send a list of those domains including two columns. 
+One with the WHMCS ID's and the other with the domain names. 
+Name SRS will then import those to ensure the callbacks works optimal for you.
 ```
 
 -----
