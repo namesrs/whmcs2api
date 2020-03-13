@@ -94,72 +94,89 @@ function namesrs_SaveDNS($params)
 {
   try
   {
-    $api = new DNSnameSRS($params);
-    if(is_array($params['dnsrecords']))
+    //Check correct NS
+    $api = new RequestSRS($params);
+    $domain = $api->searchDomain();
+    $ns = $domain['nameservers'];
+    $ourNS = FALSE;
+    foreach($ns as $value)
     {
-      $i = 0;
-      while($i < count($params['dnsrecords']))
+      if(preg_match('/^ns[1-5].nameisp.info$/i', $value['nameserver']))
       {
-        $item = &$params['dnsrecords'][$i];
-        $record = Array(
-          'domainname' => $api->domainName,
-          'name' => $item['hostname'].($item['hostname']!='' ? '.' : '').$api->domainName,
-          'content' => $item['address'],
-          'ttl' => 3600,
-          'prio' => (int)$item['priority'],
-          'recordid' => $item['recid']
-        );
-        switch($item['type'])
-        {
-          case 'URL':
-            $record['type'] = 'REDIRECT';
-            $record['redirecttype'] = 301;
-            break;
-          case 'FRAME':
-            $record['type'] = 'REDIRECT';
-            $record['redirecttype'] = 'frame';
-            break;
-          case 'MXE':
-            // create A and then MX
-            $record['type'] = 'A';
-            $mailer = 'mxe-'.strtr($item['address'],':.','--');
-            $params['dnsrecords'][] = Array(
-              'domainname' => $api->domainName,
-              'name' => $item['hostname'].($item['hostname']!='' ? '.' : '').$api->domainName,
-              'content' => $mailer.'.'.$api->domainName,
-              'ttl' => 3600,
-              'prio' => (int)$item['priority'],
-              'type' => 'MX'
-            );
-            break;
-          default:
-            $record['type'] = $item['type'];
-        }
-        if($item['recid'])
-        {
-          if($item['address']!='')
-          {
-            // update existing record
-            $api->updateDNSrecord($record);
-          }
-          else
-          {
-            // delete a record
-            $api->deleteDNSrecord(Array(
-              'domainname' => $api->domainName,
-              'recordid' => $item['recid']
-            ));
-          }
-        }
-        elseif($item['address']!='')
-        {
-          // add new record
-          $api->addDNSrecord($record);
-        }
-        $i++;
+        $ourNS = TRUE;
+        break;
       }
     }
-    return array('success' => 'success');
+    if($ourNS)
+    {
+      $api = new DNSnameSRS($params);
+      if(is_array($params['dnsrecords']))
+      {
+        $i = 0;
+        while($i < count($params['dnsrecords']))
+        {
+          $item = &$params['dnsrecords'][$i];
+          $record = Array(
+            'domainname' => $api->domainName,
+            'name' => $item['hostname'].($item['hostname']!='' ? '.' : '').$api->domainName,
+            'content' => $item['address'],
+            'ttl' => 3600,
+            'prio' => (int)$item['priority'],
+            'recordid' => $item['recid']
+          );
+          switch($item['type'])
+          {
+            case 'URL':
+              $record['type'] = 'REDIRECT';
+              $record['redirecttype'] = 301;
+              break;
+            case 'FRAME':
+              $record['type'] = 'REDIRECT';
+              $record['redirecttype'] = 'frame';
+              break;
+            case 'MXE':
+              // create A and then MX
+              $record['type'] = 'A';
+              $mailer = 'mxe-'.strtr($item['address'],':.','--');
+              $params['dnsrecords'][] = Array(
+                'domainname' => $api->domainName,
+                'name' => $item['hostname'].($item['hostname']!='' ? '.' : '').$api->domainName,
+                'content' => $mailer.'.'.$api->domainName,
+                'ttl' => 3600,
+                'prio' => (int)$item['priority'],
+                'type' => 'MX'
+              );
+              break;
+            default:
+              $record['type'] = $item['type'];
+          }
+          if($item['recid'])
+          {
+            if($item['address']!='')
+            {
+              // update existing record
+              $api->updateDNSrecord($record);
+            }
+            else
+            {
+              // delete a record
+              $api->deleteDNSrecord(Array(
+                'domainname' => $api->domainName,
+                'recordid' => $item['recid']
+              ));
+            }
+          }
+          elseif($item['address']!='')
+          {
+            // add new record
+            $api->addDNSrecord($record);
+          }
+          $i++;
+        }
+      }
+      return array('success' => 'success');
+    }
+    else return array('error' => 'To be able to edit the DNS records you need to set the nameservers to "ns1.nameisp.info" and "ns2.nameisp.info"');
   }
   catch (Exception $e)
   {

@@ -77,6 +77,15 @@ function namesrs_ClientAreaCustomButtonArray($params)
 	return $buttonarray;
 }
 
+function namesrs_AdminCustomButtonArray($params) 
+{
+   $buttonarray = array(
+ 	 	 "DomainStatus" => "domain_status",
+		 "DomainSync" => "domain_sync"
+	);
+	return $buttonarray;
+}
+
 require_once "lib/Request.php";
 require_once "lib/NameServers.php";
 require_once "lib/DNSrecords.php";
@@ -128,6 +137,70 @@ function namesrs_ModifyNameserver($params)
 function namesrs_DeleteNameserver($params)
 {
   return Array('error' => 'Not supported');
+}
+
+function namesrs_domain_status($params)
+{
+  //Api request status
+  $api = new RequestSRS($params);
+  try
+  {
+    $result = $api->request('GET', "/request/requestlist", ['domainname' => $params['original']['domainname']]);
+    echo '<br>History Status domain: '.$params['original']['domainname'].' <br>';
+    foreach ($result['requests'] as $request)
+  	{
+  		foreach ($request['substatus'] as $status) $substatus .= " ".$status;
+  		echo ' Request Date: '.$request['created'].' reqType: '.$request['reqType'].' substatus: <strong>'.$substatus.'</strong>';
+  		if($request['error'][0]['desc'] != '') echo 'Request error: <strong style="color:red;">'.$request['error'][0]['desc'].'</strong>';
+  		echo '<br>'; 
+  		$substatus = '';
+  	}
+  
+    $domain = $api->searchDomain();
+    if(is_array($domain)) switch($domain['tldrules']['status'])
+    {
+      case 200:
+      case 201:
+        $statusName = 'Active';
+        break;
+   	  case 300:
+        $statusName = 'Pending Transfer';
+        break;
+   	  case 500:
+        $statusName = 'Expired';
+        break;
+   	  case 503:
+        $statusName = 'Redemption';
+        break;
+   	  case 504:
+        $statusName = 'Grace';
+        break;
+   	  case 2:
+   	  case 10:
+   	  case 11:
+      case 400:
+   	  case 4000:
+   	  case 4006:
+        $statusName = 'Pending';
+        break;
+   	}
+    //Return real status
+    echo "<br><br>Domain status: <strong>".$statusName."</strong><br>Expiration Date: ".$domain['expires']."<br>Created Date: ".$domain['created'].'<br><br>';
+    return 'success';
+  }
+  catch(Exception $e)
+  {
+    return $e->getMessage();
+  }
+}
+
+function namesrs_domain_sync($params)
+{
+  //Api request status
+  $api = new RequestSRS($params);
+  $domain = $api->searchDomain();
+	if(is_array($domain))	return 'success';
+	else return 'Invalid domain';
 }
 
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

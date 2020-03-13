@@ -19,8 +19,11 @@ function namesrs_GetNameservers($params)
   }
   catch (Exception $e)
   {
+    // More details
+    $msg = $e->getMessage();
+    if (substr($msg, 0, 6) == '(2003)') $msg = 'This domain is either not registered with us or currently being transferred';
     return array(
-      'error' => $e->getMessage(),
+      'error' => $msg,
     );
   }
 }
@@ -31,8 +34,15 @@ function namesrs_SaveNameservers($params)
   {
     $api = new RequestSRS($params);
     $nameServers = array();
+    putenv('RES_OPTIONS=retrans:1 retry:1 timeout:3 attempts:1'); // timeout of 3sec
     for($i = 1; $i <= 5; $i++)
-      if($params["ns".$i]!='') $nameServers[] = $params["ns".$i];
+    {
+      if($params["ns".$i]!='') 
+      {
+        if(gethostbyname($params["ns".$i].'.')) $nameServers[] = $params["ns".$i];
+        else return array('error' => 'The hostname "'.$params["ns".$i].'" can not be resolved');
+      }
+    }
     $myParams = Array('domainname' => $api->domainName,'nameserver' => $nameServers);
     $api->request('POST',"/domain/update_domain_dns", $myParams);
     // also update the cache (if any)
