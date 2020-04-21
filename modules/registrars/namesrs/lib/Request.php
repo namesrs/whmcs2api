@@ -209,7 +209,8 @@ Class RequestSRS
       $expire = substr($domain['renewaldate'],0,10);
       // update status, expiration and next due date
       $command  = "UpdateClientDomain";
-      $admin   	= getAdminUser();
+      $res      = $pdo->query("SELECT username FROM tbladmins WHERE disabled=0 LIMIT 1");
+      $admin   	= $res->rowCount() ? $res->fetch(PDO::FETCH_NUM)[0] : '';
       //$dueDateDays = localAPI('GetConfigurationValue', 'DomainSyncNextDueDateDays', $admin);
       $result = $pdo->query('SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1');
       $dueDateDays = $result->rowCount() ? $result->fetch(PDO::FETCH_NUM)[0] : 0;
