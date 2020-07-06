@@ -110,7 +110,7 @@ Class RequestSRS
       CURLOPT_RETURNTRANSFER => 1,
       CURLOPT_SSL_VERIFYHOST => 2,
       CURLOPT_SSL_VERIFYPEER => 1,
-      CURLOPT_TIMEOUT => 16,
+      //CURLOPT_TIMEOUT => 35, removed by FREI
     ]);
     if (is_array($postfields))
     {
