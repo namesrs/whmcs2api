@@ -105,6 +105,7 @@ function namesrs_RegisterDomain($params)
       'nameserver' => $nserver,
       'custom_field' => $params['domainid'],
       'tmchacceptance' => 1,
+      'DNSid' => $params['DNS_id'],
     ]);
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(4 /* register */, $params['domainid'], $handle, json_encode(['ns' => $nserver]));

@@ -11,6 +11,7 @@ Class RequestSRS
   public $params;
   protected $sessionId;
   public $domainName;
+  protected $dns_id;
 
   /**
    * Request constructor.
@@ -27,6 +28,7 @@ Class RequestSRS
     if ($this->params["Base_URL"]) $this->base_url = trim($this->params["Base_URL"]);
     if ($this->account == '') throw new Exception('Missing API key');
     if ($this->params['Base_URL'] == '') $this->base_url = API_HOST;
+    if ($this->params['DNS_id']) $this->dnsid = (int)$this->params["DNS_id"];
     logModuleCall(
       'nameSRS',
       'request',

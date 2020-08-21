@@ -20,8 +20,9 @@ function namesrs_getConfigArray()
 	  "Base_URL" => array( "Type" => "text", "Size" => "25", "Default" => API_HOST, "Description" => "Hostname for API endpoints", "FriendlyName" => "Base URL"),
 	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameISP's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
+    "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
 	);
-	if($_SERVER['HTTP_HOST'] == 'whmcs.nameisp.com') $configarray['Test_mode'] = array(
+	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
   );
 	return $configarray;
