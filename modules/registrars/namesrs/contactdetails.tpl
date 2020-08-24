@@ -22,19 +22,19 @@
 	<tbody>
     <tr>
       <td align="right"><b>ID number</b></td>
-			<td><input class="form-control" type="text" name="orgnr" value="{$org_num}"></td>
+			<td><input class="form-control" type="text" name="orgnr" value="{$org_num}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>Organization</b></td>
-			<td><input class="form-control" type="text" name="orgname" value="{$org_name}"></td>
+			<td><input class="form-control" type="text" name="orgname" value="{$org_name}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>First name</b></td>
-			<td><input class="form-control" type="text" name="firstname" value="{$first_name}"></td>
+			<td><input class="form-control" type="text" name="firstname" value="{$first_name}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>Last name</b></td>
-			<td><input class="form-control" type="text" name="lastname" value="{$last_name}"></td>
+			<td><input class="form-control" type="text" name="lastname" value="{$last_name}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>Country</b></td>
@@ -42,28 +42,28 @@
 		</tr>
     <tr>
       <td align="right"><b>City</b></td>
-			<td><input class="form-control" type="text" name="city" value="{$city}"></td>
+			<td><input class="form-control" type="text" name="city" value="{$city}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>ZIP code</b></td>
-			<td><input class="form-control" type="text" name="zip" value="{$zip}"></td>
+			<td><input class="form-control" type="text" name="zip" value="{$zip}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>Address</b></td>
-			<td><input class="form-control" type="text" name="address" value="{$address}"></td>
+			<td><input class="form-control" type="text" name="address" value="{$address}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>Phone</b></td>
-			<td><input class="form-control" type="tel" name="phone" value="{$phone}"></td>
+			<td><input class="form-control" type="tel" name="phone" value="{$phone}" {$readonly}></td>
 		</tr>
     <tr>
       <td align="right"><b>E-mail</b></td>
-			<td><input class="form-control" type="email" name="email" value="{$email}"></td>
+			<td><input class="form-control" type="email" name="email" value="{$email}" {$readonly}></td>
 		</tr>
 	</tbody>
 </table>
 
-<p class="text-center">
+<p class="text-center" {$hide_submit}>
   <input class="btn btn-large btn-primary" type="submit" name="cmdSave" value="{$LANG.clientareasavechanges}">
 </p>
 

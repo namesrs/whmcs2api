@@ -187,13 +187,15 @@ function namesrs_setContactDetails($params)
       'last_name' => $lastname,
       'org_name' => $orgname,
       'org_num' => $orgnum,
-      'country' => $country,
+      'country' => str_replace('<select ',$params['owner_change'] ? '<select ' : '<select disabled ',$country),
       'city' => $city,
       'zip' => $zipcode,
       'address' => $address,
       'phone' => $phone[1],
       'email' => $email,
       'redirect' => $redirect,
+      'readonly' => $params['owner_change'] ? '' : 'readonly',
+      'hide_submit' => $params['owner_change'] ? '' : 'hidden',
     ),
   );
 }

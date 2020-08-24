@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 45 (21 Aug 2020, 08:50)
+# WHMCS modules from NameSRS - version 46 (24 Aug 2020, 16:21)
 -----
 # NOTE 1
 ```
@@ -119,7 +119,7 @@ The bulk import is performed in 3 steps:
 ### Configuration
 
 - within the WHMCS admin area, go to **Setup -> Products/Services -> Products/Services**
-- find the product **Owner change** and click the `edit` icon at the right end of the line
+- find the product **Change registrant (hidden)** and click the `edit` icon at the right end of the line
 - go to the **Pricing** tab
 - enter your profit margin (the fixed amount that will be added to the price coming from the NameSRS API) under the **One Time** column - preferrably for all of the available currencies 
 
