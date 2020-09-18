@@ -22,6 +22,7 @@ function namesrs_getConfigArray()
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
     "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
     "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details" ),
+    "sync_due_date" => array( "Type" => "yesno", "FriendlyName" => "Enable NextDueDate synchronization", "Description" => "Enable/disable automatic sync/update of Next Due Date every time you access domain details" ),
 	);
 	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
@@ -79,7 +80,7 @@ function namesrs_ClientAreaCustomButtonArray($params)
 	return $buttonarray;
 }
 
-function namesrs_AdminCustomButtonArray($params) 
+function namesrs_AdminCustomButtonArray($params)
 {
    $buttonarray = array(
  	 	 "DomainStatus" => "domain_status",
@@ -154,10 +155,10 @@ function namesrs_domain_status($params)
   		foreach ($request['substatus'] as $status) $substatus .= " ".$status;
   		echo ' Request Date: '.$request['created'].' reqType: '.$request['reqType'].' substatus: <strong>'.$substatus.'</strong>';
   		if($request['error'][0]['desc'] != '') echo 'Request error: <strong style="color:red;">'.$request['error'][0]['desc'].'</strong>';
-  		echo '<br>'; 
+  		echo '<br>';
   		$substatus = '';
   	}
-  
+
     $domain = $api->searchDomain();
     if(is_array($domain)) switch($domain['tldrules']['status'])
     {

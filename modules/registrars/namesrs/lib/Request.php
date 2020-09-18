@@ -222,7 +222,7 @@ Class RequestSRS
       $values["expirydate"] = $expire;
       $expireDate = new DateTime($expire);
       $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
-      $values['nextduedate'] = $expireDate->format('Y-m-d');
+      if($this->params['sync_due_date']) $values['nextduedate'] = $expireDate->format('Y-m-d');
       $values['regdate'] = substr($domain['created'],0,10);
       $status_id = key($domain['status']);
       $statusName = '';
@@ -239,7 +239,7 @@ Class RequestSRS
           $statusName = 'Expired';
           break;
         case 503:
-          $statusName = 'Redemption'; 
+          $statusName = 'Redemption';
           break;
         case 504:
           $statusName = 'Grace';
@@ -257,7 +257,7 @@ Class RequestSRS
       logModuleCall(
         'nameSRS',
         'SearchDomain('.$this->domainName.')',
-        "We updated domain status ($statusName), expiration and next due date",
+        "We updated domain status ($statusName), expiration".($this->params['sync_due_date'] ? " and next due date" : ""),
         $values
       );
     }

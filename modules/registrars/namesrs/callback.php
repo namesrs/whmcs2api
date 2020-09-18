@@ -84,7 +84,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
             include "callbacks/CallbackRegister.php";
             break;
           default:
-            echo '{"code": 6, "message": "Unknown request type in the WHMCS queue"}'; 
+            echo '{"code": 6, "message": "Unknown request type in the WHMCS queue"}';
             logModuleCall(
               'nameSRS',
               "Unknown request type (" . $req['method'] . ") in the WHMCS queue",
@@ -93,9 +93,9 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
             );
         }
       }
-      else 
+      else
       {
-        echo '{"code": 7, "message": "Request ID was not found in WHMCS queue"}'; 
+        echo '{"code": 7, "message": "Request ID was not found in WHMCS queue"}';
         logModuleCall(
           'nameSRS',
           "Could not find Request ID (" . $reqid . ") in the WHMCS queue",
@@ -167,13 +167,13 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     $expire = substr($json['renewaldate'], 0, 10);
     if ($expire != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $expire))
     {
-      $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp, nextduedate = DATE_SUB(:exp2,INTERVAL (
+      $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp'.($cfg['sync_due_date'] ? ', nextduedate = DATE_SUB(:exp2,INTERVAL (
         SELECT value FROM tblconfiguration WHERE setting = "DomainSyncNextDueDateDays" ORDER BY id DESC LIMIT 1
-      ) day) WHERE registrar = "namesrs" AND id = :id');
-      $stm->execute(['exp' => $expire, 'exp2' => $expire, 'id' => $domainid]);
+      ) day)' : '').' WHERE registrar = "namesrs" AND id = :id');
+      $stm->execute($cfg['sync_due_date'] ? ['exp' => $expire, 'exp2' => $expire, 'id' => $domainid] : ['exp' => $expire, 'id' => $domainid]);
       logModuleCall(
         'nameSRS',
-        "Updated expiration date for " . $domainname,
+        "Updated expiration date".($cfg['sync_due_date'] ? " and next due date" : "")." for " . $domainname,
         $json['objectname'],
         'Affected rows = ' . $stm->rowCount()
       );
@@ -241,7 +241,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
   }
   else
   {
-    echo '{"code": 4, "message": "Unknown template"}'; 
+    echo '{"code": 4, "message": "Unknown template"}';
     logModuleCall(
       'nameSRS',
       "Callback IGNORED from " . $_SERVER['REMOTE_ADDR'],
