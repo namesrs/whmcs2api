@@ -111,6 +111,7 @@ catch (PDOException $e)
 }
 
 // "orgnr" is a custom client field - SE/NU registries require ID of the person or EIK/VAT of the company
+/* We no longer create this field but take its name from the module config - it is very likely you already have the field defined
 if($isCLI) echo "- Creating custom client field OrgNr".$lineBreak;
 $q = 'INSERT INTO tblcustomfields(type,fieldname,fieldtype,required,showorder,showinvoice) 
   SELECT "client","orgnr|Organization Number / Personal Number","text","on","on","on" FROM dual 
@@ -123,7 +124,7 @@ catch (PDOException $e)
 {
   echo $e->getMessage().$lineBreak;
 }
-
+*/
 // we use this custom product to charge the customer when the TLD requires a fee to change the domain registrant
 if($isCLI) echo "- Creating custom product 'Change registrant'".$lineBreak;
 try

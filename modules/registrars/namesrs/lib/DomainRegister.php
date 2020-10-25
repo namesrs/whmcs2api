@@ -5,6 +5,9 @@ require_once dirname(__FILE__).'/OwnerValidations.php';
 
 function namesrs_RegisterDomain($params)
 {
+  if(trim($params['orgnr_field']) == '') return [
+    'error' => 'NameSRS registrar module config is missing the name of the custom field that stores Company/Person ID'
+  ];
   /**
    * @var $pdo PDO
    */
@@ -15,7 +18,7 @@ function namesrs_RegisterDomain($params)
     $stm = $pdo->prepare('SELECT cfv.value FROM `tblcustomfields` AS cf 
                         JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = :userid) 
                         WHERE cf.fieldname LIKE :name AND cf.type = "client"');
-    $stm->execute(['userid' => $params['userid'], 'name' => 'orgnr|%']);
+    $stm->execute(['userid' => $params['userid'], 'name' => $params['orgnr_field']]);
     if ($stm->rowCount())
     {
       $orgnr = $stm->fetch(PDO::FETCH_NUM)[0];
@@ -47,22 +50,6 @@ function namesrs_RegisterDomain($params)
     // Different TLDs use different names for the field which holds VAT number
     // we can not cope with that so we check for the field "Tax ID" which should be defined for all relevant domains in "/whmcs/resources/domains/additionalfields.php"
     $orig['orgnr'] = $orgnr;
-    /*
-    if ($orig['orgnr'] == '')
-    {
-      $orig['orgnr'] = trim($params['additionalfields']['Tax ID']);
-      logModuleCall(
-        'nameSRS',
-        'Using Tax ID as Personal ID',
-        array(
-          'personal ID' => $orig['orgnr'],
-        ),
-        array(
-          'userid' => $params['userid']
-        )
-      );
-    }
-*/
     $err = namesrs_ValidOwner($orig);
     if($err) return $err;
 

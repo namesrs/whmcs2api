@@ -23,6 +23,7 @@ function namesrs_getConfigArray()
     "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
     "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details" ),
     "sync_due_date" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Enable NextDueDate synchronization", "Description" => "Enable/disable automatic sync/update of Next Due Date every time you access domain details" ),
+    "orgnr_field" => array( "Type" => "text", "Size" => "20", "Default" => "orgnr|%", "FriendlyName" => "OrgNr field name", "Description" => "The name of the custom field in user details that is used as Company/Person ID" ),
 	);
 	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"

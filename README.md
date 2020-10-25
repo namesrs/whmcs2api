@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 49 (18 Sep 2020, 11:35)
+# WHMCS modules from NameSRS - version 50 (25 Oct 2020, 15:05)
 -----
 # NOTE 1
 ```
@@ -41,7 +41,7 @@ The installation script makes the following modifications:
   - **mod_namesrssession** - to cache the session key used to communicate with the API
   - **tblnamesrshandles** - used to map domain IDs between WHMCS and NameSRS API
   - **tblnamesrsjobs** - used as a queue for API requests which do not provide immediate end result
-3. creates a custom field `OrgNr` for client accounts which holds VAT/EIK registration number or Personal ID - required by the SE/NU registries
+3. ~~creates a custom field `OrgNr` for client accounts which holds VAT/EIK registration number or Personal ID - required by the SE/NU registries~~ The module no longer creates the field for you - instead you are expected to provide the field name that is specific for your WHMCS installation as part of the module configuration
 4. creates the product group **Domain owner change** - used by the WHMCS provisioning module below
 5. creates the custom product **Change registrant** - used by the WHMCS provisioning module below
 6. assigns a price of 1.00 for the above product in each of the currently defined in WHMCS currencies - the reseller can then update this `profit margin`
@@ -58,6 +58,8 @@ Most of the API endpoints provide an immediate result (e.g. updating name server
 ### Configuring the plugin
 
 ![](https://github.com/nameisp/whmcs/raw/master/configuration.png)
+
+Domain registrations will fail if you do not provide the name of your custom field holding the Company/Person ID in the module config.
 
 ### Debugging
 
