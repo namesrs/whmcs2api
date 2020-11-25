@@ -116,7 +116,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
       );
     }
   }
-	elseif ($json['template'] == 'ITEM_UPDATE')
+	elseif ($json['template'] == 'ITEM_UPDATE' OR $json['template'] == 'ITEM_CREATED')
   {
     $domainid = (int)$json['itemdetails']['custom_field'];
     if ($domainid == 0)
@@ -155,14 +155,24 @@ if (in_array($_SERVER['REMOTE_ADDR'], [
     $stm = $pdo->prepare('UPDATE tbldomains SET status = "Cancelled" WHERE registrar = "namesrs" AND id <> :id AND domain = :name');
     $stm->execute(['id' => $domainid, 'name' => $domainname]);
 
-    if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
-    else $status = '';
-    if ($status != '') $status_name = $json['status']['mainstatus'][$status];
-    else $status_name = 'Unknown status';
-    if ($json['status']['substatus']) $substatus = key($json['status']['substatus']);
-    else $substatus = '';
-    if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
-    else $substatus_name = 'Unknown substatus';
+    if($json['template'] == 'ITEM_UPDATE')
+    {
+      if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
+      else $status = '';
+      if ($status != '') $status_name = $json['status']['mainstatus'][$status];
+      else $status_name = 'Unknown status';
+      if ($json['status']['substatus']) $substatus = key($json['status']['substatus']);
+      else $substatus = '';
+      if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
+      else $substatus_name = 'Unknown substatus';
+    }
+    else
+    {
+      $status = $json['itemdetails']['mainstatus'];
+      $status_name = 'Missing status name';
+      $substatus = $json['itemdetails']['substatus'];
+      $substatus_name = 'Missing substatus name';
+    }
     // update the expiration date and next due date
     $expire = substr($json['renewaldate'], 0, 10);
     if ($expire != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $expire))
