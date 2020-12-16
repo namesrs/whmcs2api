@@ -13,9 +13,13 @@ header('X-WHMCS: '.VERSION.', '.STAMP);
 /** @var  $pdo  PDO */
 $pdo = Capsule::connection()->getPdo();
 
-if (in_array($_SERVER['REMOTE_ADDR'], [
-    '91.237.66.70',
-    '78.90.165.87',
+// We accept callbacks only from the NameISP server - to prevent hackers from sending fake callbacks
+// We also allow invoking this script from the command line and feeding it from STDIN
+$remoteIP = $_SERVER['HTTP_CF_CONNECTING_IP']; // CloudFlare
+if($remoteIP == '') $remoteIP = $_SERVER['REMOTE_ADDR'];
+if (in_array($remoteIP, [
+    '91.237.66.70', // NameISP production server
+    '78.90.165.87', // development machine
   ]) OR php_sapi_name() == 'cli') try
 {
   $payload = file_get_contents('php://input');
