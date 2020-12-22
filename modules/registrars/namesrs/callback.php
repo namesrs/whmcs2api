@@ -45,8 +45,7 @@ if (in_array($remoteIP, [
   logModuleCall(
     'nameSRS',
     "Callback received from " . $_SERVER['REMOTE_ADDR'],
-    $json,
-    $payload
+    json_encode($json,JSON_PRETTY_PRINT)
   );
   $account = "namesrs";
   $cfg = getRegistrarConfigOptions($account);
@@ -92,7 +91,7 @@ if (in_array($remoteIP, [
             logModuleCall(
               'nameSRS',
               "Unknown request type (" . $req['method'] . ") in the WHMCS queue",
-              $req,
+              json_encode($req,JSON_PRETTY_PRINT),
               ''
             );
         }
@@ -115,7 +114,7 @@ if (in_array($remoteIP, [
       logModuleCall(
         'nameSRS',
         "Missing object name",
-        $json,
+        json_encode($json,JSON_PRETTY_PRINT),
         ''
       );
     }
@@ -148,7 +147,7 @@ if (in_array($remoteIP, [
         logModuleCall(
           'nameSRS',
           $msg,
-          $json,
+          json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
         die;
@@ -259,7 +258,7 @@ if (in_array($remoteIP, [
     logModuleCall(
       'nameSRS',
       "Callback IGNORED from " . $_SERVER['REMOTE_ADDR'],
-      $json,
+      json_encode($json,JSON_PRETTY_PRINT),
       'Template is not recognized'
     );
   }

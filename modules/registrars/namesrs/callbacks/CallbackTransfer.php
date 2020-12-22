@@ -8,7 +8,7 @@ if($status == 2000)
     logModuleCall(
       'nameSRS',
       'callback_transfer_success',
-      $json,
+      json_encode($json,JSON_PRETTY_PRINT),
       'Main status = 2000, substatus == 2001, domain = '.$req['domain']
     );
 
@@ -26,7 +26,7 @@ if($status == 2000)
   	$postData = array(
    		'messagename' => 'Domain Transfer Completed',
   		'id' =>$req['domain_id']);
-  	$results = localAPI('SendEmail', $postData, $admin);  
+  	$results = localAPI('SendEmail', $postData, $admin);
   }
   elseif($substatus == 2004 OR $substatus == 4998)
   {
@@ -34,16 +34,16 @@ if($status == 2000)
     logModuleCall(
       'namesrs',
       'callback_transfer_failed',
-      $json,
+      json_encode($json,JSON_PRETTY_PRINT),
       'Main status = 2000, substatus = '.$substatus.', domain = '.$req['domain']
     );
     domainStatus($req['domain_id'], 'Cancelled');
-    
+
     //Send notification to customer
   	$postData = array(
    		'messagename' => 'Domain Transfer Failed',
   		'id' =>$req['domain_id']);
-  	$results = localAPI('SendEmail', $postData, $admin);  
+  	$results = localAPI('SendEmail', $postData, $admin);
   }
   else
   {
@@ -67,18 +67,18 @@ elseif($status == 300)
   logModuleCall(
     'nameSRS',
     'callback_transfer_away',
-    $json,
+    json_encode($json,JSON_PRETTY_PRINT),
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Transferred Away');
 }
 elseif($status == 4000)
 {
-  //Transfer failed because authcode is bad or empy
+  //Transfer failed because authcode is bad or empty
   logModuleCall(
     'nameSRS',
     'callback_transfer_authcode',
-    $json,
+    json_encode($json,JSON_PRETTY_PRINT),
     'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
   );
   domainStatus($req['domain_id'], 'Cancelled');
@@ -87,7 +87,18 @@ elseif($status == 4000)
 	$postData = array(
  		'messagename' => 'Domain Transfer Failed',
 		'id' =>$req['domain_id']);
-	$results = localAPI('SendEmail', $postData, $admin);  
+	$results = localAPI('SendEmail', $postData, $admin);
+}
+elseif($status == 1)
+{
+  // Pending
+  logModuleCall(
+    'nameSRS',
+    'callback_transfer_pending',
+    json_encode($json,JSON_PRETTY_PRINT),
+    'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
+  );
+  domainStatus($req['domain_id'], 'Pending Transfer');
 }
 else
 {

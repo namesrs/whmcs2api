@@ -7,7 +7,7 @@ if($status == 2000)
     logModuleCall(
       'nameSRS',
       'callback_renewal_failed',
-      $json,
+      json_encode($json,JSON_PRETTY_PRINT),
       'Main status = 2000, substatus != 2001, domain = '.$req['domain']
     );
     emailAdmin("Domain Renewal Failed", array(
@@ -24,7 +24,7 @@ if($status == 2000)
       'nameSRS',
       'callback_renewal_success',
       'domain = '.$req['domain'],
-      $json
+      json_encode($json,JSON_PRETTY_PRINT)
     );
 
     /** @var  $api  RequestSRS */
@@ -38,6 +38,17 @@ if($status == 2000)
     $values['status'] = 'Active';
     localAPI($command, $values, $admin);
   }
+}
+elseif($status == 1)
+{
+  // Pending
+  logModuleCall(
+    'nameSRS',
+    'callback_renewal_pending',
+    json_encode($json,JSON_PRETTY_PRINT),
+    'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
+  );
+  domainStatus($req['domain_id'], 'Pending');
 }
 else
 {
