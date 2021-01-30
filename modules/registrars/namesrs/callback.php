@@ -45,7 +45,8 @@ if (in_array($remoteIP, [
   logModuleCall(
     'nameSRS',
     "Callback received from " . $_SERVER['REMOTE_ADDR'],
-    json_encode($json,JSON_PRETTY_PRINT)
+    json_encode($json,JSON_PRETTY_PRINT),
+    ''
   );
   $account = "namesrs";
   $cfg = getRegistrarConfigOptions($account);
