@@ -228,7 +228,7 @@
           // append cost
           if(currency_list[cost.currency])
           {
-            cell.puch(thousand(Number(cost.price).toFixed(2)) + '\xA0' + cost.currency);
+            cell.push(thousand(Number(cost.price).toFixed(2)) + '\xA0' + cost.currency);
           }
           for (curr in cost.currencies)
           {
