@@ -47,7 +47,7 @@ function namesrs_price_output($vars)
     }
     catch (Exception $e)
     {
-      echo $e->getMessage();
+      echo 'NameSRS: '.$e->getMessage();
       return;
     }
   }
@@ -79,12 +79,12 @@ function namesrs_price_output($vars)
     }
     catch (Exception $e)
     {
-      echo $e->getMessage();
+      echo 'NameSRS: '.$e->getMessage();
       return;
     }
     if(count($currencyList) == 0)
     {
-      echo 'No currencies have been defined in WHMCS';
+      echo 'NameSRS: No currencies have been defined in WHMCS';
       return;
     }
 
@@ -136,7 +136,7 @@ function namesrs_price_import($pdo, $pricelist)
     }
     catch (Exception $e)
     {
-      echo $e->getMessage();
+      echo 'NameSRS: '.$e->getMessage();
       return;
     }
 
@@ -189,7 +189,7 @@ function namesrs_price_import($pdo, $pricelist)
   }
   catch (Exception $e)
   {
-    echo '<script language="JavaScript" type="text/javascript">alert("'.addslashes($e->getMessage()).'");</script>';
+    echo '<script language="JavaScript" type="text/javascript">alert("'.addslashes('NameSRS: '.$e->getMessage()).'");</script>';
   }
 }
 

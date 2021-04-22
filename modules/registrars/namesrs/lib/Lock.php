@@ -18,7 +18,7 @@ function namesrs_saveRegistrarLock($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }
@@ -34,7 +34,7 @@ function namesrs_GetRegistrarLock($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }

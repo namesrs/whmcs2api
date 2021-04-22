@@ -26,7 +26,7 @@ Class RequestSRS
     else $this->domainName = $params['domainname'];
     if ($this->params["API_key"]) $this->account = trim($this->params["API_key"]);
     if ($this->params["Base_URL"]) $this->base_url = trim($this->params["Base_URL"]);
-    if ($this->account == '') throw new Exception('Missing API key');
+    if ($this->account == '') throw new Exception('NameSRS: Missing API key');
     if ($this->params['Base_URL'] == '') $this->base_url = API_HOST;
     if ($this->params['DNS_id']) $this->dnsid = (int)$this->params["DNS_id"];
     logModuleCall(
@@ -58,11 +58,11 @@ Class RequestSRS
       }
       elseif ($loginResult["code"] == 2200)
       {
-        throw new Exception('Invalid API key');
+        throw new Exception('NameSRS: Invalid API key');
       }
       else
       {
-        throw new Exception($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error');
+        throw new Exception('NameSRS: '.($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error'));
       }
     }
     $result = $this->call($action, $functionName, $myParams);
@@ -79,17 +79,17 @@ Class RequestSRS
       }
       elseif ($loginResult["code"] == 2200)
       {
-        throw new Exception('Could not renew the session token for the API');
+        throw new Exception('NameSRS: Could not renew the session token for the API');
       }
       else
       {
-        throw new Exception($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error');
+        throw new Exception('NameSRS: '.($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error'));
       }
       $result = $this->call($action, $functionName, $myParams);
       if ($result['code'] == 1000 OR $result['code'] == 1300) return $result;
-      else throw new Exception('(' . $result['code'] . ') ' . $result['desc']);
+      else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
     }
-    else throw new Exception('(' . $result['code'] . ') ' . $result['desc']);
+    else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
   }
 
   /**
@@ -132,7 +132,7 @@ Class RequestSRS
     }
 
     $response = curl_exec($ch);
-    if (curl_errno($ch)) throw new Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+    if (curl_errno($ch)) throw new Exception('NameSRS: Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
     curl_close($ch);
     $result = json_decode($response, TRUE);
     logModuleCall(
@@ -142,7 +142,7 @@ Class RequestSRS
       $response,
       $result
     );
-    if ($result === NULL && json_last_error() !== JSON_ERROR_NONE) throw new Exception('Bad response received from API');
+    if ($result === NULL && json_last_error() !== JSON_ERROR_NONE) throw new Exception('NameSRS: Bad response received from API');
     return $result;
   }
 
@@ -186,7 +186,7 @@ Class RequestSRS
       {
         $handle = $list['items'][0]['itemID'];
       }
-      else throw new Exception('Could not retrieve domain ID from the API');
+      else throw new Exception('NameSRS: Could not retrieve domain ID from the API');
       logModuleCall(
         'nameSRS',
         'SearchDomain('.$this->domainName.')',

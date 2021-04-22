@@ -71,7 +71,7 @@ function namesrs_CheckAvailability($params)
   }
   catch (Exception $e)
   {
-    return array('error' => $e->getMessage());
+    return array('error' => 'NameSRS: '.$e->getMessage());
   }
 }
 

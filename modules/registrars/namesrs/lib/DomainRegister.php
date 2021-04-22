@@ -6,7 +6,7 @@ require_once dirname(__FILE__).'/OwnerValidations.php';
 function namesrs_RegisterDomain($params)
 {
   if(trim($params['orgnr_field']) == '') return [
-    'error' => 'NameSRS registrar module config is missing the name of the custom field that stores Company/Person ID'
+    'error' => 'NameSRS: registrar module config is missing the name of the custom field that stores Company/Person ID'
   ];
   /**
    * @var $pdo PDO
@@ -101,7 +101,7 @@ function namesrs_RegisterDomain($params)
   catch (Exception $e)
   {
     return [
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     ];
   }
 }

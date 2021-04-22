@@ -90,37 +90,37 @@ function namesrs_validateSwedishEGN($egn)
 
 function namesrs_ValidOwner($data)
 {
-  if (trim($data['firstname']) == '') return ['error' => 'First name is required. Please update contact details in profile.'];
-  if (trim($data['lastname']) == '') return ['error' => 'Last name is required. Please update contact details in profile.'];
-  if (trim($data['address1']) == '') return ['error' => 'Address is required. Please update contact details in profile.'];
-  if (trim($data['postcode']) == '') return ['error' => 'ZIP code is required. Please update contact details in profile.'];
-  if (trim($data['city']) == '') return ['error' => 'City is required. Please update contact details in profile.'];
-  if (trim($data['countrycode']) == '') return ['error' => 'Country is required. Please update contact details in profile.'];
-  if (trim(preg_replace('/^[^\.]\./','',$data['fullphonenumber'])) == '') return ['error' => 'Phone number is required. Please update contact details in profile.'];
-  if (trim($data['email']) == '') return ['error' => 'Contact e-mail is required. Please update contact details in profile.'];
+  if (trim($data['firstname']) == '') return ['error' => 'NameSRS: First name is required. Please update contact details in profile.'];
+  if (trim($data['lastname']) == '') return ['error' => 'NameSRS: Last name is required. Please update contact details in profile.'];
+  if (trim($data['address1']) == '') return ['error' => 'NameSRS: Address is required. Please update contact details in profile.'];
+  if (trim($data['postcode']) == '') return ['error' => 'NameSRS: ZIP code is required. Please update contact details in profile.'];
+  if (trim($data['city']) == '') return ['error' => 'NameSRS: City is required. Please update contact details in profile.'];
+  if (trim($data['countrycode']) == '') return ['error' => 'NameSRS: Country is required. Please update contact details in profile.'];
+  if (trim(preg_replace('/^[^\.]\./','',$data['fullphonenumber'])) == '') return ['error' => 'NameSRS: Phone number is required. Please update contact details in profile.'];
+  if (trim($data['email']) == '') return ['error' => 'NameSRS: Contact e-mail is required. Please update contact details in profile.'];
 
   if ($data['countrycode'] == 'SE' AND in_array($data['tld'], ['se', 'nu']))
   {
-    if ($data['orgnr'] == '') return ['error' => 'Personal/Organization ID number is required field. Please update your profile.'];
+    if ($data['orgnr'] == '') return ['error' => 'NameSRS: Personal/Organization ID number is required field. Please update your profile.'];
     $data['orgnr'] = preg_replace('/^19|^20/', '', preg_replace('/[^0-9]/', '', $data['orgnr']));
     if (!namesrs_validateSwedishEGN($data['orgnr']))
     {
       if (is_numeric($data['orgnr']))
       {
-        if ($data['orgnr'] < 10000) return ['error' => 'Invalid Organization ID (' . $data['orgnr'] . ')'];
+        if ($data['orgnr'] < 10000) return ['error' => 'NameSRS: Invalid Organization ID (' . $data['orgnr'] . ')'];
         if (trim($data['companyname']) == '')
         {
           $data['companyname'] = 'Företag'; // Comply with GDPR - otherwise the person's name is visible on WHOIS
         }
       }
       else
-        return ['error' => 'Invalid or missing Personal ID (' . $data['orgnr'] . ')'];
+        return ['error' => 'NameSRS: Invalid or missing Personal ID (' . $data['orgnr'] . ')'];
     }
 
     $data['postcode'] = preg_replace('/[^0-9]/', '', $data['postcode']);
-    if (!preg_match('/^\d{5}$/', $data['postcode'])) return ['error' => 'Invalid ZIP code'];
+    if (!preg_match('/^\d{5}$/', $data['postcode'])) return ['error' => 'NameSRS: Invalid ZIP code'];
     $data['fullphonenumber'] = preg_replace('/\.0+/', '.', preg_replace('/[^0-9\.\+]/', '', $data['fullphonenumber']));
-    if (!preg_match('/^\+\d\d+\.\d{5,}$/', $data['fullphonenumber'])) return ['error' => 'Invalid phone number'];
+    if (!preg_match('/^\+\d\d+\.\d{5,}$/', $data['fullphonenumber'])) return ['error' => 'NameSRS: Invalid phone number'];
   }
 
   return FALSE;

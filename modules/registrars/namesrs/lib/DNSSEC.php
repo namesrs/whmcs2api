@@ -18,9 +18,9 @@ function namesrs_dnssec($params)
       $dnskey = trim($_POST['dnskey']);
       $flags  = trim($_POST['flags']);
       $alg    = trim($_POST['alg']);
-      if($dnskey == '') $error = 'Missing DNS key';
-      elseif($flags == 0) $error = 'Missing flags';
-      elseif($alg == 0) $error = 'Missing algorithm';
+      if($dnskey == '') $error = 'NameSRS: Missing DNS key';
+      elseif($flags == 0) $error = 'NameSRS: Missing flags';
+      elseif($alg == 0) $error = 'NameSRS: Missing algorithm';
       else
       {
         $data = array(
@@ -45,7 +45,7 @@ function namesrs_dnssec($params)
   }
   catch (Exception $e)
   {
-    $error = $e->getMessage();
+    $error = 'NameSRS: '.$e->getMessage();
   }
   return array(
     'templatefile' => "dnssec",

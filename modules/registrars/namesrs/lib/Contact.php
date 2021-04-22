@@ -19,7 +19,7 @@ function namesrs_GetContactDetails($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }
@@ -180,7 +180,7 @@ function namesrs_setContactDetails($params)
   return array(
     'templatefile' => "contactdetails",
     'vars' => array(
-      'error' => $error,
+      'error' => 'NameSRS: '.$error,
       'successful' => $success,
       // 'cid' => $cid,
       'first_name' => $firstname,

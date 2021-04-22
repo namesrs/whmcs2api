@@ -13,7 +13,7 @@ function namesrs_TransferDomain($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }

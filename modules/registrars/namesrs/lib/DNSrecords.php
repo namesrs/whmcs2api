@@ -13,7 +13,7 @@ class DNSnameSRS extends RequestSRS
     {
       return $result['dns'][$this->domainName]['records'];
     }
-    else throw new Exception('Could not understand the API response');
+    else throw new Exception('NameSRS: Could not understand the API response');
   }
 
   /**
@@ -43,7 +43,7 @@ class DNSnameSRS extends RequestSRS
   {
     $result = $this->request('POST',"/dns/addrecord", $record);
     if($result['recordid']) return $result['recordid'];
-    else throw new Exception('Could not understand the API response');
+    else throw new Exception('NameSRS: Could not understand the API response');
   }
 }
 
@@ -85,7 +85,7 @@ function namesrs_GetDNS($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }
@@ -176,12 +176,12 @@ function namesrs_SaveDNS($params)
       }
       return array('success' => 'success');
     }
-    else return array('error' => 'To be able to edit the DNS records you need to set the nameservers to "ns1.nameisp.info" and "ns2.nameisp.info"');
+    else return array('error' => 'NameSRS: To be able to edit the DNS records you need to set the nameservers to "ns1.nameisp.info" and "ns2.nameisp.info"');
   }
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }
@@ -248,7 +248,7 @@ function namesrs_setEmailForwarding($params)
   }
   catch (Exception $e)
   {
-    $error = $e->getMessage();
+    $error = 'NameSRS: '.$e->getMessage();
   }
   return array(
     'templatefile' => "mailforward",

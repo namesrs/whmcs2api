@@ -35,14 +35,14 @@ function namesrsowner_CreateAccount($params)
   $pdo = Capsule::connection()->getPdo();
 
   $registrant = $params['customfields']['ownerdata'];
-  if($registrant == '') return 'Empty registrant data';
+  if($registrant == '') return 'NameSRS: Empty registrant data';
   $json = json_decode($registrant,TRUE);
 
   // get the domain name from domain ID
   try
   {
     $res = $pdo->query('SELECT domain FROM tbldomains WHERE id = '.(int)$json['domainid']);
-    if(!$res->rowCount()) return 'Could not find a domain with ID = '.(int)$json['domainid'];
+    if(!$res->rowCount()) return 'NameSRS: Could not find a domain with ID = '.(int)$json['domainid'];
     $domainName = $res->fetch(PDO::FETCH_NUM)[0];
   }
   catch (Exception $e)
@@ -54,7 +54,7 @@ function namesrsowner_CreateAccount($params)
       $e->getMessage(),
       $e->getTraceAsString()
     );
-    return $e->getMessage();
+    return 'NameSRS: '.$e->getMessage();
   }
   //load and check if registrar module is installed
   require_once(implode(DIRECTORY_SEPARATOR, [ROOTDIR, "includes", "registrarfunctions.php"]));
@@ -82,7 +82,7 @@ function namesrsowner_CreateAccount($params)
         $e->getMessage(),
         $e->getTraceAsString()
       );
-      return $e->getMessage();
+      return 'NameSRS: '.$e->getMessage();
     }
   }
   if ($error)
@@ -130,6 +130,6 @@ function namesrsowner_CreateAccount($params)
       $e->getMessage(),
       $e->getTraceAsString()
     );
-    return $e->getMessage();
+    return 'NameSRS: '.$e->getMessage();
   }
 }

@@ -24,7 +24,7 @@ function namesrs_whoisprivacy($params)
   }
   catch (Exception $e)
   {
-    $error = $e->getMessage();
+    $error = 'NameSRS: '.$e->getMessage();
   }
   return array(
     'templatefile' => "whoisprivacy",
@@ -42,7 +42,7 @@ function namesrs_IDProtectToggle($params)
   catch (Exception $e)
   {
     return array(
-      'error' => $e->getMessage(),
+      'error' => 'NameSRS: '.$e->getMessage(),
     );
   }
 }
