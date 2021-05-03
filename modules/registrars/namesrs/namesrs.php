@@ -5,7 +5,7 @@
 * Author: www.nameisp.com - support@nameisp.com
 *
 */
-include __DIR__."/version.php";
+include_once __DIR__."/version.php";
 use WHMCS\Database\Capsule as Capsule;
 
 /** @var  $pdo PDO */
@@ -14,6 +14,9 @@ define('API_HOST',"api.domainname.systems");
 
 function namesrs_getConfigArray()
 {
+  $result = Capsule::select("select code from tblcurrencies where `default` limit 1");
+  $base_currency = $result[0]->code;
+
 	$configarray = array(
 	  "Description" => array("Type" => "System", "Value" => "version ".VERSION.' ('.STAMP.')'),
 	  "API_key" => array( "Type" => "text", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
@@ -23,7 +26,10 @@ function namesrs_getConfigArray()
     "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
     "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details" ),
     "sync_due_date" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Enable NextDueDate synchronization", "Description" => "Enable/disable automatic sync/update of Next Due Date every time you access domain details" ),
+    //"custom_orgnr" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Use custom OrgID field", "Description" => "Use a custom field (whose name is specified below) for Organization ID instead of WHMCS default Tax ID field" ),
     "orgnr_field" => array( "Type" => "text", "Size" => "20", "Default" => "orgnr|%", "FriendlyName" => "OrgNr field name", "Description" => "The name of the custom field in user details that is used as Company/Person ID" ),
+    "cost_check" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Automatic cost check", "Description" => "Checking if the selling price is below the domain cost for Register, Renew, Transfer domain" ),
+    "exchange_rate" => array( "Type" => "text", "Size" => "10", "Default" => "1.00", "FriendlyName" => "Exchange rate for SEK", "Description" => "How many SEK can be bought for 1.00 ".$base_currency),
 	);
 	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
@@ -205,6 +211,61 @@ function namesrs_domain_sync($params)
   $domain = $api->searchDomain();
 	if(is_array($domain))	return 'success';
 	else return 'Invalid domain';
+}
+
+function namesrs_sale_cost($api,$params,$operation)
+{
+  if($params['cost_check'])
+  {
+    // get the price from WHMCS
+    $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
+    $admin = is_array($result) && count($result) ? $result[0]->username : '';
+
+    $results = localAPI('GetClientsDomains', array('domainid' => $params['domainid']), $admin);
+    if(is_array($results)) $price = $results['domains']['domain'][0]['firstpaymentamount'];
+    else return Array('error' => 'NameSRS: Could not get domain selling price from WHMCS');
+    // get user's currency
+    $result = Capsule::select("select * from tblcurrencies where id=".(int)$params['currency']);
+    $user_currency = $result[0]->code;
+    $exchange_rate = $result[0]->default ? 1 : $result[0]->rate;
+    if($result[0]->default) $base_currency = $user_currency;
+    else
+    {
+      // get WHMCS base currency
+      $result = Capsule::select("select code from tblcurrencies where `default` limit 1");
+      $base_currency = $result[0]->code;
+    }
+    // get the price from NameSRS
+    $result = $api->request('GET','/economy/pricelist', Array(
+      'skiprules' => 1,
+      'pricetypes' => 0,
+      'tldname' => $params['tld'],
+    ));
+    $retail = $result['pricelist']['domains'][$params['tld']]['Retail'][$operation];
+    if(!is_array($retail)) return Array('error' => 'NameSRS: Could not get the current TLD price');
+    $cost[$retail['currency']] = $retail['price'];
+    if(is_array($retail['currencies'])) foreach($retail['currencies'] as $currency => $values) $cost[$currency] = $values['price'];
+    // check if cost < sell price
+    $codes = array_keys($cost); // currency codes
+    if(in_array($user_currency, $codes))
+    {
+      $min_price = $cost[$user_currency];
+      $min_currency = $user_currency;
+    }
+    elseif(in_array($base_currency, $codes))
+    {
+      $min_price = $codes[$base_currency] * $exchange_rate;
+      $min_currency = $base_currency;
+    }
+    else
+    {
+      if($params['exchange_rate'] <= 0) return Array('error' => 'NameSRS: No exchange rate for SEK was set in the module config');
+      $min_price = $codes['SEK'] * $exchange_rate * ($params['exchange_rate'] > 0 ? $params['exchange_rate'] : 1);
+      $min_currency = 'SEK';
+    }
+    if($price < $min_price) return Array('error' => 'NameSRS: The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency);
+  }
+  return true;
 }
 
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

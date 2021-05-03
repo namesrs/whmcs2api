@@ -8,14 +8,17 @@ include __DIR__."/version.php";
 use WHMCS\Database\Capsule as Capsule;
 use WHMCS\Domains\Domain as DomPuny;
 
-$old_error_handler = set_error_handler('myErrorHandler', E_ALL & ~E_NOTICE | E_STRICT);
+define('ROOT_FOLDER',dirname(dirname(__DIR__)));
+
+$old_error_handler = set_error_handler('myErrorHandler', E_ALL);
 header('X-WHMCS: '.VERSION.', '.STAMP);
 /** @var  $pdo  PDO */
 $pdo = Capsule::connection()->getPdo();
 
 // We accept callbacks only from the NameISP server - to prevent hackers from sending fake callbacks
 // We also allow invoking this script from the command line and feeding it from STDIN
-$remoteIP = $_SERVER['HTTP_CF_CONNECTING_IP']; // CloudFlare
+$remoteIP = '';
+if(isset($_SERVER['HTTP_CF_CONNECTING_IP'])) $remoteIP = $_SERVER['HTTP_CF_CONNECTING_IP']; // CloudFlare
 if($remoteIP == '') $remoteIP = $_SERVER['REMOTE_ADDR'];
 if (in_array($remoteIP, [
     '91.237.66.70', // NameISP production server
@@ -125,8 +128,12 @@ if (in_array($remoteIP, [
     $domainid = (int)$json['itemdetails']['custom_field'];
     if ($domainid == 0)
     {
-      $domainObj = new DomPuny($json['objectname']);
-      $domainname = $domainObj->getDomain(FALSE); // get UTF-8
+      $domainname = $json['itemdetails']['idndomainname'];
+      if($domainname == '')
+      {
+        $domainObj = new DomPuny($json['itemdetails']['domainname']);
+        $domainname = $domainObj->getDomain(FALSE); // get UTF-8
+      }
       // find the most recent domain with this name
       $stm = $pdo->prepare('SELECT id,status FROM tbldomains WHERE registrar = "namesrs" AND domain = :name ORDER BY id DESC');
       $stm->execute(['name' => $domainname]);
@@ -141,8 +148,8 @@ if (in_array($remoteIP, [
       }
       if($domainid == 0)
       {
-        if($cnt == 0) $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was not found';
-        else $msg = 'Missing custom_field - objectname "'.$json['objectname'].'" was found but status was not PENDING';
+        if($cnt == 0) $msg = 'Could not find this domain"'.$json['itemdetails']['domainname'].'"';
+        else $msg = 'Missing custom_field - domain "'.$json['itemdetails']['domainname'].'" was found but status was not PENDING';
         //header('HTTP/1.1 400 '.$msg, TRUE, 400);
         echo '{"code": 3, "message":'.json_encode($msg).'}';
         logModuleCall(
@@ -159,26 +166,13 @@ if (in_array($remoteIP, [
     $stm = $pdo->prepare('UPDATE tbldomains SET status = "Cancelled" WHERE registrar = "namesrs" AND id <> :id AND domain = :name');
     $stm->execute(['id' => $domainid, 'name' => $domainname]);
 
-    if($json['template'] == 'ITEM_UPDATE')
-    {
-      if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
-      else $status = '';
-      if ($status != '') $status_name = $json['status']['mainstatus'][$status];
-      else $status_name = 'Unknown status';
-      if ($json['status']['substatus']) $substatus = key($json['status']['substatus']);
-      else $substatus = '';
-      if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
-      else $substatus_name = 'Unknown substatus';
-    }
-    else
-    {
-      $status = $json['itemdetails']['mainstatus'];
-      $status_name = 'Missing status name';
-      $substatus = $json['itemdetails']['substatus'];
-      $substatus_name = 'Missing substatus name';
-    }
+    $status = $json['itemdetails']['mainstatus'];
+    $status_name = 'Missing status name';
+    $substatus = $json['itemdetails']['substatus'];
+    $substatus_name = 'Missing substatus name';
+
     // update the expiration date and next due date
-    $expire = substr($json['renewaldate'], 0, 10);
+    $expire = substr($json['itemdetails']['renewaldate'], 0, 10);
     if ($expire != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $expire))
     {
       $stm = $pdo->prepare('UPDATE tbldomains SET expirydate = :exp'.($cfg['sync_due_date'] ? ', nextduedate = DATE_SUB(:exp2,INTERVAL (
@@ -187,21 +181,21 @@ if (in_array($remoteIP, [
       $stm->execute($cfg['sync_due_date'] ? ['exp' => $expire, 'exp2' => $expire, 'id' => $domainid] : ['exp' => $expire, 'id' => $domainid]);
       logModuleCall(
         'nameSRS',
-        "Updated expiration date".($cfg['sync_due_date'] ? " and next due date" : "")." for " . $domainname,
-        $json['objectname'],
+        "Updated expiration date (".$expire.")".($cfg['sync_due_date'] ? " and next due date" : "")." for " . $domainname,
+        $json['itemdetails']['domainname'],
         'Affected rows = ' . $stm->rowCount()
       );
     }
     // update the registration date
-    $regdate = substr($json['created'],0,10);
+    $regdate = substr($json['itemdetails']['created'],0,10);
     if($regdate != '' AND preg_match('/^\d{4}-\d{2}-\d{2}$/', $regdate))
     {
       $stm = $pdo->prepare('UPDATE tbldomains SET registrationdate = :regdate WHERE registrar = "namesrs" AND id = :id');
       $stm->execute(['regdate' => $regdate, 'id' => $domainid]);
       logModuleCall(
         'nameSRS',
-        "Updated registration date for " . $domainname,
-        $json['objectname'],
+        "Updated registration date (".$regdate.") for " . $domainname,
+        $json['itemdetails']['domainname'],
         'Affected rows = ' . $stm->rowCount()
       );
     }
@@ -213,7 +207,7 @@ if (in_array($remoteIP, [
       logModuleCall(
         'nameSRS',
         "Setting status to ACTIVE for " . $domainname,
-        $json['objectname'],
+        $json['itemdetails']['domainname'],
         'Affected rows = ' . $stm->rowCount()
       );
     }
@@ -225,7 +219,7 @@ if (in_array($remoteIP, [
       logModuleCall(
         'nameSRS',
         "Setting status to TRANSFERRED AWAY for " . $domainname,
-        $json['objectname'],
+        $json['itemdetails']['domainname'],
         'Affected rows = ' . $stm->rowCount()
       );
     }
@@ -248,7 +242,7 @@ if (in_array($remoteIP, [
       logModuleCall(
         'nameSRS',
         "Setting status to EXPIRED for " . $domainname,
-        $json['objectname'],
+        $json['itemdetails']['domainname'],
         'Affected rows = ' . $stm->rowCount()
       );
     }
@@ -319,8 +313,9 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
   //header('HTTP/1.1 500 Error in callback', TRUE, 500);
   // Only handle the errors specified by the error_reporting directive or function
   // Ensure that we should be displaying and/or logging errors
-  //if ( ! ($errno & error_reporting ()) || ! (ini_get ('display_errors') || ini_get ('log_errors'))) return;
-  if (($errno & (E_NOTICE | E_STRICT)) OR error_reporting() == 0) return;
+  if ( ! ($errno & error_reporting ()) || ! (ini_get ('display_errors') || ini_get ('log_errors'))) return;
+
+  //if (($errno & (E_NOTICE | E_STRICT)) AND !preg_match('#^'.ROOT_FOLDER.'/(registrars|addons|servers)/namesrs)#',$errfile)) return;
 
   // define an assoc array of error string
   // in reality the only entries we should
@@ -398,7 +393,7 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
     $s,
     ''
   );
-  echo $s;
+  echo '{"code": 5, "message": '.json_encode($s).'}';
   die;
 }
 

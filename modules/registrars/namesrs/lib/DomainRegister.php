@@ -54,6 +54,9 @@ function namesrs_RegisterDomain($params)
     if($err) return $err;
 
     $api = new RequestSRS($params);
+    $result = namesrs_sale_cost($api, $params,'Registration');
+    if(is_array($result)) return $result;
+
     // Always create new contact - NameISP will remove duplicates on their side
     $data = [
       'firstname' => $orig['firstname'],
@@ -93,6 +96,8 @@ function namesrs_RegisterDomain($params)
       'custom_field' => $params['domainid'],
       'tmchacceptance' => 1,
       'DNSid' => $params['DNS_id'],
+      'price' => $price,
+      'currency' => $currency,
     ]);
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(4 /* register */, $params['domainid'], $handle, json_encode(['ns' => $nserver]));

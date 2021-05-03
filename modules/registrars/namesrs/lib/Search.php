@@ -30,6 +30,8 @@ function namesrs_CheckAvailability($params)
   $isIdnDomain = (bool) $params['isIdnDomain'];
   $premiumEnabled = (bool) $params['premiumEnabled'];
 
+  $params['tlds'] = array_filter($params['tlds'], 'remove_empty_tld');
+  if(count($params['tlds']) == 0) return new ResultsList(); // There is no pricing defined for the current user's currency - or no TLDs defined at all
   try
   {
     $response = $api->request('POST','/domain/searchdomain', Array(
@@ -71,13 +73,23 @@ function namesrs_CheckAvailability($params)
   }
   catch (Exception $e)
   {
-    return array('error' => 'NameSRS: '.$e->getMessage());
+    logModuleCall(
+      'nameSRS',
+      'Domain Search',
+      $e->getMessage(),
+      $e->getTrace()
+    );
   }
 }
 
 function search_domains($tld,$sld)
 {
   return $sld.$tld;
+}
+
+function remove_empty_tld($tld)
+{
+  return trim($tld) != '';
 }
 
 /**
