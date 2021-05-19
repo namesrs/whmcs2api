@@ -93,6 +93,7 @@ function namesrs_price_output($vars)
     $price_currencies = array();
     if(is_array($result['pricelist']['domains'])) foreach($result['pricelist']['domains'] as $domain => $priceObj)
     {
+      if (!$priceObj['Retail']) continue;
       $pricelist[$domain] = $priceObj['Retail'];
       $item = &$priceObj['Retail']['Registration'];
       $cur = $item['currency'];
