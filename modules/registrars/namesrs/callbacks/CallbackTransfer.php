@@ -27,6 +27,15 @@ if($status == 2000)
    		'messagename' => 'Domain Transfer Completed',
   		'id' =>$req['domain_id']);
   	$results = localAPI('SendEmail', $postData, $admin);
+
+    // Custom code to trigger hook when domain successfully transfered
+    $postData = array(
+      'domainid' => $req['domain_id']
+    );
+    $apiresults = localAPI('GetClientsDomains', $postData, $admin);
+    $domainDetails = $apiresults['domains']['domain'][0];
+    run_hook("DomainTransferCompleted", array("domainId" => $req['domain_id'], "domain" => $domainDetails['domainname'], "registrationPeriod" => $domainDetails['regperiod'], "expiryDate" => $domainDetails['expirydate'], "registrar" => $domainDetails['registrar']));
+    // EOF custom code
   }
   elseif($substatus == 2004 OR $substatus == 4998)
   {
