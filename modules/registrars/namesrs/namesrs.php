@@ -241,7 +241,9 @@ function namesrs_sale_cost($api,$params,$operation)
       'pricetypes' => 0,
       'tldname' => $params['tld'],
     ));
-    $retail = $result['pricelist']['domains'][$params['tld']]['Retail'][$operation];
+    if(!is_array($result['pricelist']['domains'][$params['tld']])) return Array('error' => 'NameSRS: Missing price class');
+    $priceClass = array_keys($result['pricelist']['domains'][$params['tld']])[0];
+    $retail = $result['pricelist']['domains'][$params['tld']][$priceClass][$operation];
     if(!is_array($retail)) return Array('error' => 'NameSRS: Could not get the current TLD price');
     $cost[$retail['currency']] = $retail['price'];
     if(is_array($retail['currencies'])) foreach($retail['currencies'] as $currency => $values) $cost[$currency] = $values['price'];
