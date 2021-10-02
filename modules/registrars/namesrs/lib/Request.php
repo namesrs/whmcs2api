@@ -186,13 +186,13 @@ Class RequestSRS
       {
         $handle = $list['items'][0]['itemID'];
       }
-      else throw new Exception('NameSRS: Could not retrieve domain ID from the API');
       logModuleCall(
         'nameSRS',
         'SearchDomain('.$this->domainName.')',
         'We asked API for domain ID',
-        $handle
+        $handle ? 'Domain ID = '.$handle : 'No domain ID was found'
       );
+      if (!$handle) throw new Exception('NameSRS: Could not retrieve domain ID from the API');
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
     $domain = $result['items'][$handle];
