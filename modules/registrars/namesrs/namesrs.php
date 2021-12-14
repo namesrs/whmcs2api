@@ -29,7 +29,7 @@ function namesrs_getConfigArray()
     //"custom_orgnr" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Use custom OrgID field", "Description" => "Use a custom field (whose name is specified below) for Organization ID instead of WHMCS default Tax ID field" ),
     "orgnr_field" => array( "Type" => "text", "Size" => "20", "Default" => "orgnr|%", "FriendlyName" => "OrgNr field name", "Description" => "The name of the custom field in user details that is used as Company/Person ID" ),
     "cost_check" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Automatic cost check", "Description" => "Checking if the selling price is below the domain cost for Register, Renew, Transfer domain" ),
-    "exchange_rate" => array( "Type" => "text", "Size" => "10", "Default" => "1.00", "FriendlyName" => "Exchange rate for SEK", "Description" => "How many SEK can be bought for 1.00 ".$base_currency),
+    "exchange_rate" => array( "Type" => "text", "Size" => "10", "Default" => "1.00", "FriendlyName" => "Exchange rate for ".$base_currency."/SEK", "Description" => "How many ".$base_currency." can be bought for 1.00 SEK"),
 	);
 	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
@@ -242,8 +242,12 @@ function namesrs_sale_cost($api,$params,$operation)
       'tldname' => $params['tld'],
     ));
     if(!is_array($result['pricelist']['domains'][$params['tld']])) return Array('error' => 'NameSRS: Missing price class');
-    $priceClass = array_keys($result['pricelist']['domains'][$params['tld']])[0];
-    $retail = $result['pricelist']['domains'][$params['tld']][$priceClass][$operation];
+    $pricing = [];
+    foreach($result['pricelist']['domains'][$params['tld']] as $priceClass => $operations)
+    {
+      foreach($operations as $opName => $opCost) $pricing[$opName] = $opCost;
+    }
+    $retail = $pricing[$operation];
     if(!is_array($retail)) return Array('error' => 'NameSRS: Could not get the current TLD price');
     $cost[$retail['currency']] = $retail['price'];
     if(is_array($retail['currencies'])) foreach($retail['currencies'] as $currency => $values) $cost[$currency] = $values['price'];
@@ -256,13 +260,13 @@ function namesrs_sale_cost($api,$params,$operation)
     }
     elseif(in_array($base_currency, $codes))
     {
-      $min_price = $codes[$base_currency] * $exchange_rate;
+      $min_price = $cost[$base_currency] * $exchange_rate;
       $min_currency = $base_currency;
     }
     else
     {
       if($params['exchange_rate'] <= 0) return Array('error' => 'NameSRS: No exchange rate for SEK was set in the module config');
-      $min_price = $codes['SEK'] * $exchange_rate * ($params['exchange_rate'] > 0 ? $params['exchange_rate'] : 1);
+      $min_price = $cost['SEK'] * $exchange_rate * ($params['exchange_rate'] > 0 ? $params['exchange_rate'] : 1);
       $min_currency = 'SEK';
     }
     if($price < $min_price) return Array('error' => 'NameSRS: The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency);
