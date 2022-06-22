@@ -184,7 +184,14 @@ Class RequestSRS
       $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200]);
       if ($list)
       {
-        $handle = $list['items'][0]['itemID'];
+        foreach($list['items'] as $domItem)
+        {
+          if($domItem['domainname'] == $this->domainName)
+          {
+            $handle = $domItem['itemID'];
+            break;
+          }
+        }
       }
       logModuleCall(
         'nameSRS',
