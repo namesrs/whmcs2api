@@ -29,7 +29,6 @@ if (in_array($remoteIP, [
   $json = json_decode($payload, TRUE);
   if (!(is_array($json) AND count($json) > 0))
   {
-    //header('HTTP/1.1 400 Empty payload', TRUE, 400);
     echo '{"code": 1, "message":"Empty payload"}';
     $headers = [];
     foreach ($_SERVER as $name => $value)
@@ -43,6 +42,7 @@ if (in_array($remoteIP, [
       $payload,
       $headers
     );
+    adminError("NameSRS callback - Empty callback received from " . $_SERVER['REMOTE_ADDR'], $payload, $headers);
     die;
   }
   logModuleCall(
@@ -98,6 +98,7 @@ if (in_array($remoteIP, [
               json_encode($req,JSON_PRETTY_PRINT),
               ''
             );
+            adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", json_encode($req,JSON_PRETTY_PRINT));
         }
       }
       else
@@ -109,11 +110,11 @@ if (in_array($remoteIP, [
           '',
           ''
         );
+        adminError("NameSRS callback - Could not find Request ID (" . $reqid . ") in the WHMCS queue", '');
       }
     }
     else
     {
-      //header('HTTP/1.1 400 Missing object name', TRUE, 400);
       echo '{"code": 2, "message":"Missing object name"}';
       logModuleCall(
         'nameSRS',
@@ -121,6 +122,7 @@ if (in_array($remoteIP, [
         json_encode($json,JSON_PRETTY_PRINT),
         ''
       );
+      adminError("NameSRS callback - Missing object name in the callback payload", json_encode($json,JSON_PRETTY_PRINT));
     }
   }
 	elseif ($json['template'] == 'ITEM_UPDATE' OR $json['template'] == 'ITEM_CREATED')
@@ -150,7 +152,6 @@ if (in_array($remoteIP, [
       {
         if($cnt == 0) $msg = 'Could not find this domain"'.$json['itemdetails']['domainname'].'"';
         else $msg = 'Missing custom_field - domain "'.$json['itemdetails']['domainname'].'" was found but status was not PENDING';
-        //header('HTTP/1.1 400 '.$msg, TRUE, 400);
         echo '{"code": 3, "message":'.json_encode($msg).'}';
         logModuleCall(
           'nameSRS',
@@ -158,6 +159,7 @@ if (in_array($remoteIP, [
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
+        adminError("NameSRS callback - ".$msg, json_encode($json,JSON_PRETTY_PRINT));
         die;
       }
     }
@@ -256,6 +258,7 @@ if (in_array($remoteIP, [
       json_encode($json,JSON_PRETTY_PRINT),
       'Template is not recognized'
     );
+    adminError("NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], json_encode($json,JSON_PRETTY_PRINT));
   }
 }
 catch (Exception $e)
@@ -268,6 +271,7 @@ catch (Exception $e)
     $e->getTrace()
   );
   echo '{"code": 5, "message": '.json_encode($e->getMessage()).'}';
+  adminError("NameSRS callback - run-time error (".$e->getMessage().")", $e->getTrace());
 }
 
 function domainStatus($domain_id, $status)
@@ -278,6 +282,13 @@ function domainStatus($domain_id, $status)
   $values["domainid"] = $domain_id;
   $values['status'] = $status;
   localAPI($command, $values, $admin);
+}
+
+function adminError($title, $body, $values)
+{
+  $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
+  if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";
+  $r = sendAdminNotification('system', $title, $body);
 }
 
 function emailAdmin($tpl, $fields)
@@ -397,4 +408,3 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
   die;
 }
 
-?>
