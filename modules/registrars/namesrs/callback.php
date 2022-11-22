@@ -284,7 +284,7 @@ function domainStatus($domain_id, $status)
   localAPI($command, $values, $admin);
 }
 
-function adminError($title, $body, $values)
+function adminError($title, $body, $values = NULL)
 {
   $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
   if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";

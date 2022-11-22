@@ -1,13 +1,14 @@
-# WHMCS modules from NameSRS - version 64 (16 Nov 2022, 11:23)
+# WHMCS modules from NameSRS - version 65 (22 Nov 2022, 10:52)
 -----
 # NOTE 1
 ```
-Once you have a reseller account with Name SRS you can request for the API key and base url needed for this module
+Once you have a reseller account with Name SRS you can request for the API key 
+and base URL needed for this module
 ```
 
 # NOTE 2
 ```
-After module installation you need to give the callback url to Name SRS for enabling the webhook
+After module installation you need to give the callback URL to Name SRS for enabling the webhook
 ```
 
 # NOTE 3
