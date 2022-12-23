@@ -4,6 +4,13 @@ use WHMCS\Database\Capsule as Capsule;
 
 require_once("Cache.php");
 
+function adminError($title, $body, $values = NULL)
+{
+  $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
+  if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";
+  $r = sendAdminNotification('system', $title, $body);
+}
+
 Class RequestSRS
 {
   protected $account;

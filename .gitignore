@@ -10,3 +10,12 @@ dist
 # Yarn
 yarn-error.log
 
+modules/registrars/namesrs/lib/IDN.php
+modules/registrars/namesrs/lib/_Request.php
+modules/registrars/namesrs/lib/Request_Schema.php
+modules/registrars/namesrs/lib/autoloadValidator.php
+
+modules/registrars/namesrs/lib/String
+modules/registrars/namesrs/lib/Uri
+modules/registrars/namesrs/lib/JsonSchema
+modules/registrars/namesrs/lib/schemas

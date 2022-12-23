@@ -98,7 +98,7 @@ if (in_array($remoteIP, [
               json_encode($req,JSON_PRETTY_PRINT),
               ''
             );
-            adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", json_encode($req,JSON_PRETTY_PRINT));
+            adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
         }
       }
       else
@@ -122,7 +122,7 @@ if (in_array($remoteIP, [
         json_encode($json,JSON_PRETTY_PRINT),
         ''
       );
-      adminError("NameSRS callback - Missing object name in the callback payload", json_encode($json,JSON_PRETTY_PRINT));
+      adminError("NameSRS callback - Missing object name in the callback payload", $json);
     }
   }
 	elseif ($json['template'] == 'ITEM_UPDATE' OR $json['template'] == 'ITEM_CREATED')
@@ -159,7 +159,7 @@ if (in_array($remoteIP, [
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
-        adminError("NameSRS callback - ".$msg, json_encode($json,JSON_PRETTY_PRINT));
+        adminError("NameSRS callback - ".$msg, $json);
         die;
       }
     }
@@ -258,7 +258,7 @@ if (in_array($remoteIP, [
       json_encode($json,JSON_PRETTY_PRINT),
       'Template is not recognized'
     );
-    adminError("NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], json_encode($json,JSON_PRETTY_PRINT));
+    adminError("NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], $json);
   }
 }
 catch (Exception $e)
@@ -284,12 +284,6 @@ function domainStatus($domain_id, $status)
   localAPI($command, $values, $admin);
 }
 
-function adminError($title, $body, $values = NULL)
-{
-  $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
-  if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";
-  $r = sendAdminNotification('system', $title, $body);
-}
 
 function emailAdmin($tpl, $fields)
 {
