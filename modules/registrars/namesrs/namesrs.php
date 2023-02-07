@@ -204,6 +204,31 @@ function namesrs_domain_status($params)
   }
 }
 
+function namesrs_Sync($params)
+{
+  //Api request status
+  try
+  {
+    $api = new RequestSRS($params);
+    $domain = $api->searchDomain();
+  }
+  catch (Exception $e)
+  {
+    return array('error' => $e->getMessage());
+  }
+  if(is_array($domain))
+  {
+    $status_id = key($domain['status']);
+    return array(
+      'active' => in_array($status_id, array(200, 201, 202)),
+      'cancelled' => in_array($status_id, array(501, 502, 505, 506)),
+      'transferredAway' => $status_id === 300,
+      'expirydate' => substr($domain['renewaldate'],0,10),
+    );
+  }
+  else return array('error' => 'Could not sync domain '.$params['domain']);
+}
+
 function namesrs_domain_sync($params)
 {
   //Api request status
