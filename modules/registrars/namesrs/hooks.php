@@ -57,3 +57,110 @@ add_hook('ClientAreaPrimarySidebar', 1, function (MenuItem $primarySidebar)
   }
 });
 */
+
+add_hook('AdminHomeWidgets', 1, function()
+{
+    return new NameSRSWidget();
+});
+
+/**
+ * Module log exporter widget
+ */
+class NameSRSWidget extends \WHMCS\Module\AbstractWidget
+{
+ /**
+     * @type string The title of the widget
+     */
+    protected $title = 'NameSRS Log exporter';
+
+    /**
+     * @type string A description/purpose of the widget
+     */
+    protected $description = '';
+
+    /**
+     * @type int The sort weighting that determines the output position on the page
+     */
+    protected $weight = 100;
+
+    /**
+     * @type int The number of columns the widget should span (1, 2 or 3)
+     */
+    protected $columns = 1;
+
+    /**
+     * @type bool Set true to enable data caching
+     */
+    protected $cache = false;
+
+    /**
+     * @type int The length of time to cache data for (in seconds)
+     */
+    protected $cacheExpiry = 120;
+
+    /**
+     * @type string The access control permission required to view this widget. Leave blank for no permission.
+     * @see Permissions section below.
+     */
+    protected $requiredPermission = '';
+
+    /**
+     * Get Data.
+     *
+     * Obtain data required to render the widget.
+     *
+     * We recommend executing queries and API calls within this function to enable
+     * you to take advantage of the built-in caching functionality for improved performance.
+     *
+     * When caching is enabled, this method will be called when the cache is due for
+     * a refresh or when the user invokes it.
+     *
+     * @return array
+     */
+    public function getData()
+    {
+      /*
+        $clients = localAPI('getclients', []);
+
+        return array(
+            'welcome' => 'Hello World!',
+            'clients' => $clients['clients'],
+        );
+      */
+    }
+
+    /**
+     * Generate Output.
+     *
+     * Generate and return the body output for the widget.
+     *
+     * @param array $data The data returned by the getData method.
+     *
+     * @return string
+     */
+    public function generateOutput($data)
+    {
+      /*
+        $clientOutput = [];
+        foreach ($data['clients']['client'] as $client) {
+            $clientOutput[] = "<a href=\"clientsprofile.php?id={$client['id']}\">{$client['firstname']} {$client['lastname']}</a>";
+        }
+
+        if (count($clientOutput) == 0) {
+            $clientOutput[] = 'No Clients Found';
+        }
+
+        $clientOutput = implode('<br>', $clientOutput);
+      */
+      return <<<EOF
+<div class="widget-content-padded">
+    <div class="col-12 text-center">
+        <a href="/modules/registrars/namesrs/export_log.php" class="btn btn-default btn-sm" target="_blank">
+            <i class="fas fa-arrow-right"></i> Download last 100 log entries from the last 1 hour
+        </a>
+    </div>
+</div>
+EOF;
+    }
+}
+
