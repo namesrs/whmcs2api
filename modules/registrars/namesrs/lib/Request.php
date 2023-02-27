@@ -210,13 +210,43 @@ Class RequestSRS
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
     $domain = $result['items'][$handle];
-    DomainCache::put($domain);
+    if(!$domain OR $domain['domainname'] != $this->domainName)
+    {
+      // either no info returned (wrong domain ID) or domain name is not ours (again wrong domain ID)
+      // so we need to ask for the domain ID and update our mapping, if possible
+      if(!$domain) $reason = 'DomainDetails did not recognize domain ID ('.$handle.') - trying to search for domain ID';
+      else $reason = 'Domain ID ('.$handle.') is for '.$domain['domainname'].' instead of '.$this->domainName.' - trying to search for domain ID';
+
+      $handle = 0;
+      $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200]);
+      if ($list)
+      {
+        foreach($list['items'] as $domItem)
+        {
+          if($domItem['domainname'] == $this->domainName)
+          {
+            $handle = $domItem['itemID'];
+            break;
+          }
+        }
+      }
+      logModuleCall(
+        'nameSRS',
+        'SearchDomain('.$this->domainName.')',
+        $reason,
+        $handle ? 'Domain ID = '.$handle : 'No domain ID was found'
+      );
+      if (!$handle) throw new Exception('NameSRS: Domain ID for '.$this->domainName.' was wrong but we could not retrieve a new domain ID from the API');
+      $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
+      $domain = $result['items'][$handle];
+    }
     logModuleCall(
       'nameSRS',
       'SearchDomain('.$this->domainName.')',
       'We fetched domain details from API',
       $domain
     );
+    DomainCache::put($domain);
     // store the mapping between WHMCS domainID and NameISP domainHandle
     if($domain['custom_field'] != 0) $this->params['domainid'] = $domain['custom_field'];
     if ($this->params['domainid'] != 0)
