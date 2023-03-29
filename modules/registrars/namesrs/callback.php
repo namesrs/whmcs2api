@@ -107,7 +107,7 @@ if (in_array($remoteIP, [
         logModuleCall(
           'nameSRS',
           "Could not find Request ID (" . $reqid . ") in the WHMCS queue",
-          '',
+          json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
         adminError("NameSRS callback - Could not find Request ID (" . $reqid . ") in the WHMCS queue", '');
