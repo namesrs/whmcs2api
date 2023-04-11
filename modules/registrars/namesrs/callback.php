@@ -110,7 +110,7 @@ if (in_array($remoteIP, [
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
-        adminError("NameSRS callback - Could not find Request ID (" . $reqid . ") in the WHMCS queue", $payload);
+        adminError($json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
       }
     }
     else
