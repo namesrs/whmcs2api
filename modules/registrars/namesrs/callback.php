@@ -57,72 +57,79 @@ if (in_array($remoteIP, [
 
   if ($json['template'] == 'REQUEST_UPDATE')
   {
-    $reqid = (int)$json['reqid'];
-    $domainname = $json['objectname'];
-    if ($domainname != '')
+    if(in_array($json['reqtype'], array(
+      'create-domain-transfer',
+      'update-domain-renew',
+      'create-domain-registration',
+    )))
     {
-      if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
-      else $status = '';
-      if ($status != '') $status_name = $json['status']['mainstatus'][$status];
-      else $status_name = 'Unknown status';
-      if ($json['status']['substatus']) $substatus = key($json['status']['substatus']);
-      else $substatus = '';
-      if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
-      else $substatus_name = 'Unknown substatus';
-      // NOT PROVIDED in REQUEST_UPDATE $renewaldate = $json['renewaldate']; // YYYY-MM-DD
+      $reqid = (int)$json['reqid'];
+      $domainname = $json['objectname'];
+      if ($domainname != '')
+      {
+        if ($json['status']['mainstatus']) $status = key($json['status']['mainstatus']);
+        else $status = '';
+        if ($status != '') $status_name = $json['status']['mainstatus'][$status];
+        else $status_name = 'Unknown status';
+        if ($json['status']['substatus']) $substatus = key($json['status']['substatus']);
+        else $substatus = '';
+        if ($substatus != '') $substatus_name = $json['status']['substatus'][$substatus];
+        else $substatus_name = 'Unknown substatus';
+        // NOT PROVIDED in REQUEST_UPDATE $renewaldate = $json['renewaldate']; // YYYY-MM-DD
 
-      // our local queue of API requests, waiting their reply
-      $stm = $pdo->query('SELECT jobs.id,last_id AS domain_id,domain,method,userid,request 
+        // our local queue of API requests, waiting their reply
+        $stm = $pdo->query('SELECT jobs.id,last_id AS domain_id,domain,method,userid,request 
         FROM tblnamesrsjobs AS jobs 
         LEFT JOIN tbldomains ON tbldomains.id = last_id 
         WHERE order_id = ' . $reqid);
-      if ($stm->rowCount())
-      {
-        $req = $stm->fetch(PDO::FETCH_ASSOC);
-        switch ($req['method'])
+        if ($stm->rowCount())
         {
-          case 2: // renewal
-            include "callbacks/CallbackRenew.php";
-            break;
-          case 3: // transfer
-            include "callbacks/CallbackTransfer.php";
-            break;
-          case 4: // register
-            include "callbacks/CallbackRegister.php";
-            break;
-          default:
-            echo '{"code": 6, "message": "Unknown request type in the WHMCS queue"}';
-            logModuleCall(
-              'nameSRS',
-              "Unknown request type (" . $req['method'] . ") in the WHMCS queue",
-              json_encode($req,JSON_PRETTY_PRINT),
-              ''
-            );
-            adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
+          $req = $stm->fetch(PDO::FETCH_ASSOC);
+          switch ($req['method'])
+          {
+            case 2: // renewal
+              include "callbacks/CallbackRenew.php";
+              break;
+            case 3: // transfer
+              include "callbacks/CallbackTransfer.php";
+              break;
+            case 4: // register
+              include "callbacks/CallbackRegister.php";
+              break;
+            default:
+              echo '{"code": 6, "message": "Unknown request type in the WHMCS queue"}';
+              logModuleCall(
+                'nameSRS',
+                "Unknown request type (" . $req['method'] . ") in the WHMCS queue",
+                json_encode($req,JSON_PRETTY_PRINT),
+                ''
+              );
+              adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
+          }
+        }
+        else
+        {
+          echo '{"code": 7, "message": "Request ID was not found in WHMCS queue"}';
+          logModuleCall(
+            'nameSRS',
+            "Could not find Request ID (" . $reqid . ") in the WHMCS queue",
+            json_encode($json,JSON_PRETTY_PRINT),
+            ''
+          );
+          adminError($json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
         }
       }
       else
       {
-        echo '{"code": 7, "message": "Request ID was not found in WHMCS queue"}';
+        echo '{"code": 2, "message":"Missing object name"}';
         logModuleCall(
           'nameSRS',
-          "Could not find Request ID (" . $reqid . ") in the WHMCS queue",
+          "Missing object name",
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
-        adminError($json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
+        adminError("NameSRS callback - Missing object name in the callback payload", $json);
       }
-    }
-    else
-    {
-      echo '{"code": 2, "message":"Missing object name"}';
-      logModuleCall(
-        'nameSRS',
-        "Missing object name",
-        json_encode($json,JSON_PRETTY_PRINT),
-        ''
-      );
-      adminError("NameSRS callback - Missing object name in the callback payload", $json);
     }
   }
 	elseif ($json['template'] == 'ITEM_UPDATE' OR $json['template'] == 'ITEM_CREATED')
