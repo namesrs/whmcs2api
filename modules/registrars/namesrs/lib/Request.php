@@ -265,7 +265,9 @@ Class RequestSRS
       $values["domainid"] = $this->params['domainid'];
       $values["expirydate"] = $expire;
       $expireDate = new DateTime($expire);
-      $expireDate->sub(new DateInterval('P'.(int)$dueDateDays.'D'));
+      $dueDays = new DateInterval('P'.abs((int)$dueDateDays).'D');
+      if($dueDateDays < 0) $dueDays->invert = 1;
+      $expireDate->sub($dueDays);
       if($this->params['sync_due_date']) $values['nextduedate'] = $expireDate->format('Y-m-d');
       $values['regdate'] = substr($domain['created'],0,10);
       $status_id = key($domain['status']);
