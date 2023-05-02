@@ -188,15 +188,15 @@ Class RequestSRS
     if ($result->rowCount()) $handle = $result->fetch(PDO::FETCH_NUM)[0];
     else
     {
-      $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200]);
+      $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200, 'exact' => 1]);
       if ($list)
       {
+        $handle = 0;
         foreach($list['items'] as $domItem)
         {
           if($domItem['domainname'] == $this->domainName)
           {
-            $handle = $domItem['itemID'];
-            break;
+            if ($domItem['itemID'] > $handle) $handle = $domItem['itemID'];
           }
         }
       }
@@ -225,8 +225,7 @@ Class RequestSRS
         {
           if($domItem['domainname'] == $this->domainName)
           {
-            $handle = $domItem['itemID'];
-            break;
+            if ($domItem['itemID'] > $handle) $handle = $domItem['itemID'];
           }
         }
       }
