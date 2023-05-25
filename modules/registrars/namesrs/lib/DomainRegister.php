@@ -17,7 +17,7 @@ function namesrs_RegisterDomain($params)
   {
     $stm = $pdo->prepare('SELECT cfv.value FROM `tblcustomfields` AS cf 
                         JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = :userid) 
-                        WHERE cf.fieldname '.(strpos($params['orgnr_field'], '^') === 0 ? 'R' /* The pattern is RegExp */: '').'LIKE :name AND cf.type = "client"');
+                        WHERE cf.fieldname '.(strpos($params['orgnr_field'], '^') === 0 ? 'R' /* The pattern is RegExp */: '').'LIKE :name AND cf.type = "client" AND COALESCE(cfv.value,"") <> ""');
     $stm->execute(['userid' => $params['userid'], 'name' => $params['orgnr_field']]);
     if ($stm->rowCount())
     {
