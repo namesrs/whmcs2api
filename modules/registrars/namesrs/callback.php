@@ -42,7 +42,7 @@ if (in_array($remoteIP, [
       $payload,
       $headers
     );
-    adminError("NameSRS callback - Empty callback received from " . $_SERVER['REMOTE_ADDR'], $payload, $headers);
+    adminError("EMPTY_CALLBACK","NameSRS callback - Empty callback received from " . $_SERVER['REMOTE_ADDR'], $payload, $headers);
     die;
   }
   logModuleCall(
@@ -104,7 +104,7 @@ if (in_array($remoteIP, [
                 json_encode($req,JSON_PRETTY_PRINT),
                 ''
               );
-              adminError("NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
+              adminError('UNK_REQ_TYPE',"NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
           }
         }
         else
@@ -116,7 +116,7 @@ if (in_array($remoteIP, [
             json_encode($json,JSON_PRETTY_PRINT),
             ''
           );
-          adminError($json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
+          adminError('MISSING_REQID',$json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
         }
       }
       else
@@ -128,7 +128,7 @@ if (in_array($remoteIP, [
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
-        adminError("NameSRS callback - Missing object name in the callback payload", $json);
+        adminError('NO_OBJ_NAME',"NameSRS callback - Missing object name in the callback payload", $json);
       }
     }
   }
@@ -166,7 +166,7 @@ if (in_array($remoteIP, [
           json_encode($json,JSON_PRETTY_PRINT),
           ''
         );
-        adminError("NameSRS callback - ".$msg, $json);
+        adminError($cnt ? 'NO_CUSTOM_FIELD' : 'DOMAIN_NOT_FOUND',"NameSRS callback - ".$msg, $json);
         die;
       }
     }
@@ -265,7 +265,7 @@ if (in_array($remoteIP, [
       json_encode($json,JSON_PRETTY_PRINT),
       'Template is not recognized'
     );
-    adminError("NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], $json);
+    adminError('UNK_TEMPLATE',"NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], $json);
   }
 }
 catch (Exception $e)
@@ -278,7 +278,7 @@ catch (Exception $e)
     $e->getTrace()
   );
   echo '{"code": 5, "message": '.json_encode($e->getMessage()).'}';
-  adminError("NameSRS callback - run-time error (".$e->getMessage().")", $e->getTrace());
+  adminError('EXCEPTION',"NameSRS callback - run-time error (".$e->getMessage().")", $e->getTrace());
 }
 
 function domainStatus($domain_id, $status)

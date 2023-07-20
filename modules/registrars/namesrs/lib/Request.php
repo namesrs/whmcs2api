@@ -4,11 +4,22 @@ use WHMCS\Database\Capsule as Capsule;
 
 require_once("Cache.php");
 
-function adminError($title, $body, $values = NULL)
+/**
+ * @param $code {string} - unique identifier of the notification so we can skip it if disabled through configuration
+ * @param $title {string} - the error message in the email notification
+ * @param $body {string} - usually the JSON string of the relevant callback payload
+ * @param $values {array|NULL} - additional data that will be encoded to JSON in the email notification
+ * @return void
+ */
+function adminError($code, $title, $body, $values = NULL)
 {
-  $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
-  if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";
-  $r = sendAdminNotification('system', $title, $body);
+  $cfg = getRegistrarConfigOptions('namesrs');
+  if($cfg['ENABLE_NOTIFY_'.$code])
+  {
+    $body = '<strong>'.$title.'</strong><br><pre>'.$body.'</pre>';
+    if(is_array($values) AND count($values) > 0) $body.= "<br><br><pre>".json_encode($values, JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."</pre>";
+    $r = sendAdminNotification('system', $title, $body);
+  }
 }
 
 Class RequestSRS
