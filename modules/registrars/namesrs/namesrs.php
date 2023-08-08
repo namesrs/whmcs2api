@@ -30,6 +30,7 @@ function namesrs_getConfigArray()
     "orgnr_field" => array( "Type" => "text", "Size" => "65", "Default" => "orgnr|%", "FriendlyName" => "OrgNr field name", "Description" => "The name of the custom field in user details that is used as Company/Person ID. You can use a POSIX regular expression if you need to handle multiple field names - begin the RegExp with ^ (to distinguish from a regular MySQL search pattern) and then use alternation symbol | (pipe) as a logical OR" ),
     "cost_check" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Automatic cost check", "Description" => "Checking if the selling price is below the domain cost for Register, Renew, Transfer domain" ),
     "exchange_rate" => array( "Type" => "text", "Size" => "10", "Default" => "1.00", "FriendlyName" => "Exchange rate for ".$base_currency."/SEK", "Description" => "How many ".$base_currency." can be bought for 1.00 SEK"),
+    "allow_epp_code" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Allow clients to get the EPP code themselves", "Description" => "Clients can request the EPP code of their domain name" ),
     "ENABLE_NOTIFY_EMPTY_CALLBACK" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Notify about empty callbacks", "Description" => "Notify Admins by e-mail when the API callback sends no data" ),
     "ENABLE_NOTIFY_UNK_REQ_TYPE" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Notify about unknown REQUEST_TYPE", "Description" => "Notify Admins by e-mail when the API callback sends unrecognized REQUEST_TYPE" ),
     "ENABLE_NOTIFY_MISSING_REQID" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Notify about missing request ID", "Description" => "Notify Admins by e-mail when the API callback sends a request ID which is missing in WHMCS queue" ),
@@ -118,6 +119,10 @@ require_once "lib/Search.php";
 
 function namesrs_GetEPPCode($params)
 {
+  $allow = $params['allow_epp_code'];
+  if (!$allow) return array(
+    'error' => 'Please contact the support to get the EPP code'
+  );
 	try
 	{
     $api = new RequestSRS($params);
