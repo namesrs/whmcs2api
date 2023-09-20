@@ -107,7 +107,11 @@ Class RequestSRS
       if ($result['code'] == 1000 OR $result['code'] == 1300) return $result;
       else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
     }
-    else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
+    else
+    {
+      adminError("NAMESRS_ERROR",'NameSRS returned error (' . $result['code'] . ')', $result['desc']);
+      throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
+    }
   }
 
   /**
