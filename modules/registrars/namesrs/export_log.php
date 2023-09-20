@@ -38,7 +38,7 @@ echo '<!DOCTYPE html>
   </tr></thead><tbody>';
 
 $output = '';
-$result = $pdo->query('SELECT date,action,request,response,arrdata FROM tblmodulelog WHERE date > NOW() - INTERVAL 1 hour ORDER BY id DESC LIMIT 100');
+$result = $pdo->query('SELECT date,action,request,response,arrdata FROM tblmodulelog ORDER BY id DESC LIMIT 150');
 while($data = $result->fetch(PDO::FETCH_ASSOC))
 {
   if($data['response'] AND $data['response'][0] == '{')
