@@ -105,12 +105,12 @@ Class RequestSRS
       }
       $result = $this->call($action, $functionName, $myParams);
       if ($result['code'] == 1000 OR $result['code'] == 1300) return $result;
-      else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
+      else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
     }
     else
     {
-      adminError("NAMESRS_ERROR",'NameSRS returned error (' . $result['code'] . ')', $result['desc']);
-      throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc']);
+      adminError("NAMESRS_ERROR",'NameSRS returned error (' . $result['code'] . ')', $result['desc'], $result['error']);
+      throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
     }
   }
 
