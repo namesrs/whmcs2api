@@ -16,8 +16,8 @@ function namesrs_RegisterDomain($params)
   try
   {
     $stm = $pdo->prepare('SELECT cfv.value FROM `tblcustomfields` AS cf 
-                        JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = :userid) 
-                        WHERE cf.fieldname '.(strpos($params['orgnr_field'], '^') === 0 ? 'R' /* The pattern is RegExp */: '').'LIKE :name AND cf.type = "client" AND COALESCE(cfv.value,"") <> ""');
+      JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = :userid) 
+      WHERE cf.fieldname '.(strpos($params['orgnr_field'], '^') === 0 ? 'R' /* The pattern is RegExp */: '').'LIKE :name AND cf.type = "client" AND COALESCE(cfv.value,"") <> ""');
     $stm->execute(['userid' => $params['userid'], 'name' => $params['orgnr_field']]);
     if ($stm->rowCount())
     {
@@ -101,6 +101,7 @@ function namesrs_RegisterDomain($params)
     ]);
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(4 /* register */, $params['domainid'], $handle, json_encode(['ns' => $nserver]));
+    domainStatus($params['domainid'], 'Pending Registration');
     return ['success' => TRUE];
   }
   catch (Exception $e)

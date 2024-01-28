@@ -313,4 +313,20 @@ function namesrs_sale_cost($api,$params,$operation)
   return true;
 }
 
+function getAdminUser()
+{
+}
+
+function domainStatus($domain_id, $status)
+{
+  $command = "UpdateClientDomain";
+  $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
+  $admin = is_array($result) && count($result) ? $result[0]->username : '';
+  $values = [
+    'domainid' => $domain_id,
+    'status' => $status,
+  ];
+  localAPI($command, $values, $admin);
+}
+
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

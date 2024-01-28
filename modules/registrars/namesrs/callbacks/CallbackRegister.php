@@ -12,12 +12,7 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
   $api->domainName = $domainname;
   $domain = $api->searchDomain(); // it will update expiration date, next due date and registration date
 
-  $command  = "UpdateClientDomain";
-  $admin   	= getAdminUser();
-  $values   = array();
-  $values["domainid"] = $req['domain_id'];
-  $values['status'] = 'Active';
-  $results 	= localAPI($command, $values, $admin);
+  domainStatus($req['domain_id'], 'Active');
 
   //Send notification to customer
 	$postData = array(

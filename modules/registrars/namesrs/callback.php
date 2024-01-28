@@ -291,7 +291,6 @@ function domainStatus($domain_id, $status)
   localAPI($command, $values, $admin);
 }
 
-
 function emailAdmin($tpl, $fields)
 {
   $values = [];
