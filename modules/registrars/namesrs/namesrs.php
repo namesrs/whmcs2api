@@ -313,10 +313,6 @@ function namesrs_sale_cost($api,$params,$operation)
   return true;
 }
 
-function getAdminUser()
-{
-}
-
 function domainStatus($domain_id, $status)
 {
   $command = "UpdateClientDomain";
