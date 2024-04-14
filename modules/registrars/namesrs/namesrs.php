@@ -21,7 +21,7 @@ function namesrs_getConfigArray()
 	  "Description" => array("Type" => "System", "Value" => "version ".VERSION.' ('.STAMP.')'),
 	  "API_key" => array( "Type" => "text", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
 	  "Base_URL" => array( "Type" => "text", "Size" => "25", "Default" => API_HOST, "Description" => "Hostname for API endpoints", "FriendlyName" => "Base URL"),
-	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameISP's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
+	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameSRS's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
     "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
     "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details" ),
