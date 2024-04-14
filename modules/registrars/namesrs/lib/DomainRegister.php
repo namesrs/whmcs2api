@@ -101,7 +101,7 @@ function namesrs_RegisterDomain($params)
     ]);
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(4 /* register */, $params['domainid'], $handle, json_encode(['ns' => $nserver]));
-    domainStatus($params['domainid'], 'Pending Registration');
+    if($params['default_pending']) domainStatus($params['domainid'], 'Pending Registration');
     return ['success' => TRUE];
   }
   catch (Exception $e)

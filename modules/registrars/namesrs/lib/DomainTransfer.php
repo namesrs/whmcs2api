@@ -16,7 +16,7 @@ function namesrs_TransferDomain($params)
     ));
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(3 /* transfer */, $params['domainid'], $handle);
-    domainStatus($params['domainid'], 'Pending Transfer');
+    if($params['default_pending']) domainStatus($params['domainid'], 'Pending Transfer');
     return $handle;
   }
   catch (Exception $e)
