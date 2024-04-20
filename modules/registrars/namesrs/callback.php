@@ -281,39 +281,6 @@ catch (Exception $e)
   adminError('EXCEPTION',"NameSRS callback - run-time error (".$e->getMessage().")", $e->getTrace());
 }
 
-function domainStatus($domain_id, $status)
-{
-  $command = "UpdateClientDomain";
-  $admin = getAdminUser();
-  $values = [];
-  $values["domainid"] = $domain_id;
-  $values['status'] = $status;
-  localAPI($command, $values, $admin);
-}
-
-function emailAdmin($tpl, $fields)
-{
-  $values = [];
-  $values["messagename"] = $tpl;
-  $values["mergefields"] = $fields;
-
-  $admin = getAdminUser();
-  $r = localAPI("SendAdminEmail", $values, $admin);
-
-  logModuleCall(
-    'nameSRS',
-    'email_admin',
-    "Tried to send email to Admin, don't know if it was delivered",
-    ['input' => $values, 'output' => $r]
-  );
-}
-
-function getAdminUser()
-{
-  $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
-  return is_array($result) && count($result) ? $result[0]->username : '';
-}
-
 function namesrs_log($x)
 {
   syslog(LOG_INFO | LOG_LOCAL1, $x);

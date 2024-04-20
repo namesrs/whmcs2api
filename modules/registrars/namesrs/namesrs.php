@@ -317,13 +317,34 @@ function namesrs_sale_cost($api,$params,$operation)
 function domainStatus($domain_id, $status)
 {
   $command = "UpdateClientDomain";
-  $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
-  $admin = is_array($result) && count($result) ? $result[0]->username : '';
-  $values = [
-    'domainid' => $domain_id,
-    'status' => $status,
-  ];
+  $admin = getAdminUser();
+  $values = [];
+  $values["domainid"] = $domain_id;
+  $values['status'] = $status;
   localAPI($command, $values, $admin);
+}
+
+function emailAdmin($tpl, $fields)
+{
+  $values = [];
+  $values["messagename"] = $tpl;
+  $values["mergefields"] = $fields;
+
+  $admin = getAdminUser();
+  $r = localAPI("SendAdminEmail", $values, $admin);
+
+  logModuleCall(
+    'nameSRS',
+    'email_admin',
+    "Tried to send email to Admin, don't know if it was delivered",
+    ['input' => $values, 'output' => $r]
+  );
+}
+
+function getAdminUser()
+{
+  $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
+  return is_array($result) && count($result) ? $result[0]->username : '';
 }
 
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';
