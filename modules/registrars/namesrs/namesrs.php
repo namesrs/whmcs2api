@@ -6,7 +6,14 @@
 *
 */
 include_once __DIR__."/version.php";
+include_once __DIR__."/vendor/autoload.php";
 use WHMCS\Database\Capsule as Capsule;
+
+\Sentry\init([
+  'dsn' => 'https://2492d31026d3f16e2ca2969d03618b64@o475096.ingest.us.sentry.io/4507118220083200',
+  'release' => (string)VERSION,
+]);
+
 
 /** @var  $pdo PDO */
 $pdo = Capsule::connection()->getPdo();
@@ -122,17 +129,22 @@ require_once "lib/Search.php";
 function namesrs_GetEPPCode($params)
 {
   $allow = $params['allow_epp_code'];
-  if (!$allow) return array(
-    'error' => 'Please contact the support to get the EPP code'
-  );
+  $api = new RequestSRS($params);
+  if (!$allow)
+  {
+    logSentry('Trying to get EPP code for "'.$api->domainName.'" but not allowed by Admin');
+    return array(
+      'error' => 'Please contact the support to get the EPP code'
+    );
+  }
 	try
 	{
-    $api = new RequestSRS($params);
     $code = $api->request('POST','/domain/genauthcode',Array('domainname' => $api->domainName));
 	  return array('eppcode' => $code['authcode']);
 	}
   catch (Exception $e)
   {
+    \Sentry\captureException($e);
     return array(
       'error' => $e->getMessage(),
     );
@@ -215,6 +227,7 @@ function namesrs_domain_status($params)
   }
   catch(Exception $e)
   {
+    \Sentry\captureException($e);
     return $e->getMessage();
   }
 }
@@ -229,6 +242,7 @@ function namesrs_Sync($params)
   }
   catch (Exception $e)
   {
+    \Sentry\captureException($e);
     return array('error' => $e->getMessage());
   }
   if(is_array($domain))
@@ -263,7 +277,14 @@ function namesrs_sale_cost($api,$params,$operation)
 
     $results = localAPI('GetClientsDomains', array('domainid' => $params['domainid']), $admin);
     if(is_array($results)) $price = $results['domains']['domain'][0]['firstpaymentamount'];
-    else return Array('error' => 'NameSRS: Could not get domain selling price from WHMCS');
+    else
+    {
+      logSentry('Could not get domain selling price from WHMCS', [
+        'domainid' => $params['domainid'],
+        'domain' => $api->domainName,
+      ]);
+      return Array('error' => 'NameSRS: Could not get domain selling price from WHMCS');
+    }
     // get user's currency
     $result = Capsule::select("select * from tblcurrencies where id=".(int)$params['currency']);
     $user_currency = $result[0]->code;
@@ -281,14 +302,28 @@ function namesrs_sale_cost($api,$params,$operation)
       'pricetypes' => 0,
       'tldname' => $params['tld'],
     ));
-    if(!is_array($result['pricelist']['domains'][$params['tld']])) return Array('error' => 'NameSRS: Missing price class');
+    if(!is_array($result['pricelist']['domains'][$params['tld']]))
+    {
+      logSentry('Missing price class', [
+        'TLD' => $params['tld'],
+      ]);
+      return Array('error' => 'NameSRS: Missing price class');
+    }
     $pricing = [];
     foreach($result['pricelist']['domains'][$params['tld']] as $priceClass => $operations)
     {
       foreach($operations as $opName => $opCost) $pricing[$opName] = $opCost;
     }
     $retail = $pricing[$operation];
-    if(!is_array($retail)) return Array('error' => 'NameSRS: Could not get the current TLD price');
+    if(!is_array($retail))
+    {
+      logSentry('Could not get the current TLD price', [
+        'TLD' => $params['tld'],
+        'operation' => $operation,
+        'pricelist' => $result['pricelist']['domains'][$params['tld']],
+      ]);
+      return Array('error' => 'NameSRS: Could not get the current TLD price');
+    }
     $cost[$retail['currency']] = $retail['price'];
     if(is_array($retail['currencies'])) foreach($retail['currencies'] as $currency => $values) $cost[$currency] = $values['price'];
     // check if cost < sell price
@@ -305,11 +340,25 @@ function namesrs_sale_cost($api,$params,$operation)
     }
     else
     {
-      if($params['exchange_rate'] <= 0) return Array('error' => 'NameSRS: No exchange rate for SEK was set in the module config');
+      if($params['exchange_rate'] <= 0)
+      {
+        logSentry('No exchange rate for SEK was set in the module config', [
+          'operation' => $operation,
+          'params' => $params,
+        ]);
+        return Array('error' => 'NameSRS: No exchange rate for SEK was set in the module config');
+      }
       $min_price = $cost['SEK'] * $exchange_rate * ($params['exchange_rate'] > 0 ? $params['exchange_rate'] : 1);
       $min_currency = 'SEK';
     }
-    if($price < $min_price) return Array('error' => 'NameSRS: The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency);
+    if($price < $min_price)
+    {
+      logSentry('The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency, [
+        'operation' => $operation,
+        'params' => $params,
+      ]);
+      return Array('error' => 'NameSRS: The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency);
+    }
   }
   return true;
 }
@@ -345,6 +394,17 @@ function getAdminUser()
 {
   $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
   return is_array($result) && count($result) ? $result[0]->username : '';
+}
+
+function logSentry($message, $context = array())
+{
+  \Sentry\withScope(function (\Sentry\State\Scope $scope) use ($message,$context): void
+  {
+    $scope->setContext('WHMCS context', $context);
+
+    \Sentry\captureMessage($message);
+    // or: \Sentry\captureException($e);
+  });
 }
 
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

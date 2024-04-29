@@ -64,6 +64,7 @@ if($status == 2000)
       'status' => $substatus_name,
       'errors' => $substatus_name
     ));
+    logSentry('Unknown error in Callback for Transfer = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'], $json);
   }
 }
 elseif($status == 300)
@@ -119,4 +120,5 @@ else
     'status' => $substatus_name,
     'errors' => $substatus_name
   ));
+  logSentry('Unknown error in Callback for Transfer = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'], $json);
 }

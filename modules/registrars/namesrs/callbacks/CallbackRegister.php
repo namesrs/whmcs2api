@@ -114,4 +114,5 @@ else
     'status' => $substatus_name,
     'errors' => $substatus_name
   ));
+  logSentry('Unknown error in Callback for Registration = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'], $json);
 }

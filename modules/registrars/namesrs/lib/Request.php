@@ -76,10 +76,12 @@ Class RequestSRS
       }
       elseif ($loginResult["code"] == 2200)
       {
+        logSentry('Invalid API key (code 2200) = '.$this->account);
         throw new Exception('NameSRS: Invalid API key');
       }
       else
       {
+        logSentry($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown API login error');
         throw new Exception('NameSRS: '.($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error'));
       }
     }
@@ -97,18 +99,27 @@ Class RequestSRS
       }
       elseif ($loginResult["code"] == 2200)
       {
+        logSentry('Could not renew the session token for the API (code 2200)', [
+          'api_key' => $this->account,
+        ]);
         throw new Exception('NameSRS: Could not renew the session token for the API');
       }
       else
       {
+        logSentry($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown API login error after session expired');
         throw new Exception('NameSRS: '.($loginResult['desc'] != '' ? $loginResult['desc'] : 'Unknown login error'));
       }
       $result = $this->call($action, $functionName, $myParams);
       if ($result['code'] == 1000 OR $result['code'] == 1300) return $result;
-      else throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
+      else
+        {
+          logSentry('API error ('.$result['code'].') '.$result['desc'], $result);
+          throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
+        }
     }
     else
     {
+      logSentry('API error ('.$result['code'].') '.$result['desc'], $result);
       adminError("NAMESRS_ERROR",'NameSRS returned error (' . $result['code'] . ')', $result['desc'], $result['error']);
       throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
     }
@@ -130,6 +141,7 @@ Class RequestSRS
   {
     $url = 'https://' . $this->base_url . $functionName . ($this->sessionId != '' ? '/' . $this->sessionId : '');
     $ch = curl_init();
+    $headers = [];
     curl_setopt_array($ch, [
       CURLOPT_RETURNTRANSFER => 1,
       CURLOPT_SSL_VERIFYHOST => 2,
@@ -153,8 +165,31 @@ Class RequestSRS
       curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
     }
 
+    // this function is called by curl for each header received
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+      function($curl, $header) use (&$headers)
+      {
+        $len = strlen($header);
+        $header = explode(':', $header, 2);
+        // ignore invalid headers
+        if (count($header) > 1)
+        {
+          $headers[strtolower(trim($header[0]))][] = trim($header[1]);
+        }
+        return $len;
+      }
+    );
+
     $response = curl_exec($ch);
-    if (curl_errno($ch)) throw new Exception('NameSRS: Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+    if (curl_errno($ch))
+      {
+        logSentry('cURL connection error', [
+          'errno' => curl_errno($ch),
+          'error' => curl_error($ch),
+          'headers' => $headers,
+        ]);
+        throw new Exception('NameSRS: Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+      }
     curl_close($ch);
     $result = json_decode($response, TRUE);
     logModuleCall(
@@ -164,7 +199,17 @@ Class RequestSRS
       $response,
       $result
     );
-    if ($result === NULL && json_last_error() !== JSON_ERROR_NONE) throw new Exception('NameSRS: Bad response received from API');
+    if ($result === NULL && json_last_error() !== JSON_ERROR_NONE)
+      {
+        logSentry('Bad response received from API', [
+          'method' => $action,
+          'function' => $functionName,
+          'fields' => $postfields,
+          'response' => $response,
+          'headers' => $headers,
+        ]);
+        throw new Exception('NameSRS: Bad response received from API');
+      }
     return $result;
   }
 
@@ -221,7 +266,13 @@ Class RequestSRS
         'We asked API for domain ID',
         $handle ? 'Domain ID = '.$handle : 'No domain ID was found'
       );
-      if (!$handle) throw new Exception('NameSRS: Could not retrieve domain ID from the API');
+      if (!$handle)
+        {
+          logSentry('Could not retrieve domain ID from the API', [
+            'domain' => $this->domainName,
+          ]);
+          throw new Exception('NameSRS: Could not retrieve domain ID from the API');
+        }
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
     $domain = $result['items'][$handle];
@@ -231,6 +282,7 @@ Class RequestSRS
       // so we need to ask for the domain ID and update our mapping, if possible
       if(!$domain) $reason = 'DomainDetails did not recognize domain ID ('.$handle.') - trying to search for domain ID';
       else $reason = 'Domain ID ('.$handle.') is for '.$domain['domainname'].' instead of '.$this->domainName.' - trying to search for domain ID';
+      logSentry($reason);
 
       $handle = 0;
       $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200]);
@@ -250,7 +302,11 @@ Class RequestSRS
         $reason,
         $handle ? 'Domain ID = '.$handle : 'No domain ID was found'
       );
-      if (!$handle) throw new Exception('NameSRS: Domain ID for '.$this->domainName.' was wrong but we could not retrieve a new domain ID from the API');
+      if (!$handle)
+        {
+          logSentry('Domain ID for '.$this->domainName.' was wrong but we could not retrieve a new domain ID from the API',$list);
+          throw new Exception('NameSRS: Domain ID for '.$this->domainName.' was wrong but we could not retrieve a new domain ID from the API');
+        }
       $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
       $domain = $result['items'][$handle];
     }
@@ -353,5 +409,3 @@ Class RequestSRS
     }
   }
 }
-
-?>
