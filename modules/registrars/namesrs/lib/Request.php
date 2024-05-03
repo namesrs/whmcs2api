@@ -113,13 +113,18 @@ Class RequestSRS
       if ($result['code'] == 1000 OR $result['code'] == 1300) return $result;
       else
         {
-          logSentry('API error ('.$result['code'].') '.$result['desc'], $result);
+          logSentry('API error when renewing expired session ('.$result['code'].') '.$result['desc'], $result);
           throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
         }
     }
     else
     {
-      logSentry('API error ('.$result['code'].') '.$result['desc'], $result);
+      logSentry('API error ('.$result['code'].') '.$result['desc'], [
+        'method' => $action,
+        'function' => $functionName,
+        'params' => $myParams,
+        'result' => $result,
+      ]);
       adminError("NAMESRS_ERROR",'NameSRS returned error (' . $result['code'] . ')', $result['desc'], $result['error']);
       throw new Exception('NameSRS: (' . $result['code'] . ') ' . $result['desc'].(is_array($result['error']) ? ' Details: '.json_encode($result['error'], JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''));
     }
@@ -268,9 +273,7 @@ Class RequestSRS
       );
       if (!$handle)
         {
-          logSentry('Could not retrieve domain ID from the API', [
-            'domain' => $this->domainName,
-          ]);
+          logSentry('Could not retrieve domain ID from the API for "'.$this->domainName.'"', $list);
           throw new Exception('NameSRS: Could not retrieve domain ID from the API');
         }
     }
@@ -280,7 +283,7 @@ Class RequestSRS
     {
       // either no info returned (wrong domain ID) or domain name is not ours (again wrong domain ID)
       // so we need to ask for the domain ID and update our mapping, if possible
-      if(!$domain) $reason = 'DomainDetails did not recognize domain ID ('.$handle.') - trying to search for domain ID';
+      if(!$domain) $reason = 'DomainDetails did not recognize domain ID ('.$handle.') - trying to search for domain ID of "'.$this->domainName.'"';
       else $reason = 'Domain ID ('.$handle.') is for '.$domain['domainname'].' instead of '.$this->domainName.' - trying to search for domain ID';
       logSentry($reason);
 
