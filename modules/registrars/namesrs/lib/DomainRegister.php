@@ -50,6 +50,28 @@ function namesrs_RegisterDomain($params)
     // Different TLDs use different names for the field which holds VAT number
     // we can not cope with that so we check for the field "Tax ID" which should be defined for all relevant domains in "/whmcs/resources/domains/additionalfields.php"
     $orig['orgnr'] = $orgnr;
+    if(is_array($orig['additionalFields']) AND preg_match("/\.no$/i", $orig['domain']))
+      {
+        $regType = '';
+        $companyID = '';
+        $personID = '';
+        foreach ($orig['additionalFields'] as $field)
+        {
+          switch($field['id'])
+          {
+            case 1000:
+              $regType = $field['value'];
+              break;
+            case 1001:
+              $companyID = $field['value'];
+              break;
+            case 1002:
+              $personID = $field['value'];
+          }
+        }
+        if($regType === 'ORG') $orig['no-npri'] = $companyID;
+        elseif($regType === 'IND') $orig['no-npri'] = $personID;
+      }
     $err = namesrs_ValidOwner($orig);
     if($err) return $err;
 

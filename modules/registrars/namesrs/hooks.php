@@ -58,6 +58,9 @@ add_hook('ClientAreaPrimarySidebar', 1, function (MenuItem $primarySidebar)
 });
 */
 
+/**
+ * This widget allows for easy downloading of the last 150 records from the Module Log
+ */
 add_hook('AdminHomeWidgets', 1, function()
 {
     return new NameSRSWidget();
@@ -156,7 +159,7 @@ class NameSRSWidget extends \WHMCS\Module\AbstractWidget
 <div class="widget-content-padded">
     <div class="col-12 text-center">
         <a href="/modules/registrars/namesrs/export_log.php" class="btn btn-default btn-sm" target="_blank">
-            <i class="fas fa-arrow-right"></i> Download last 100 log entries from the last 1 hour
+            <i class="fas fa-arrow-right"></i> Download last 150 log entries for the NameSRS registrar module
         </a>
     </div>
 </div>
@@ -164,3 +167,44 @@ EOF;
     }
 }
 
+
+/**
+ * This hook will validate the additional fields that are required for each TLD
+ * An error will be returned if the necessary fields are not filled by the user
+ * Domain fields are keyed by their display name rather than their key inside additional_domain_fields.php
+ */
+add_hook('ShoppingCartValidateDomainsConfig', 50, function ($vars)
+{
+  $errors = [];
+
+  foreach($_SESSION['cart']['domains'] as $key => $domain)
+  {
+    if(substr($domain['domain'], -strlen('.no')) === '.no')
+    {
+      switch($vars['domainfield'][$key]["Registrant's type"])
+      {
+        case 'IND':
+          if(!trim($vars['domainfield'][$key]['.NO PID number']))
+          {
+            $errors[] = 'ID number is required for Norwegian residents';
+          }
+          elseif(!preg_match("/^N.PRI.(0[1-9]|1[0-9]|2[0-9]|3[0-1])(0[1-9]|1[0-2])\d{7}$/i", trim($vars['domainfield'][$key]['.NO PID number'])))
+          {
+            $errors[] = 'Given ID number is invalid';
+          }
+          break;
+        case 'ORG':
+          if(!trim($vars['domainfield'][$key]['Legal entity registration number']))
+          {
+            $errors[] = 'VAT/Tax ID number is a required field for corporate bodies';
+          }
+          break;
+        default:
+          $errors[] = 'Registrant type is missing';
+          break;
+      }
+    }
+  }
+
+  return $errors;
+});

@@ -1,6 +1,6 @@
 <?php
 $isCLI = ( php_sapi_name() == 'cli' );
-$lineBreak = $isCLI ? "\n" : "<br>\n";
+$lineBreak = $isCLI ? PHP_EOL : "<br>".PHP_EOL;
 if( !function_exists("gracefulCoreRequiredFileInclude") )
 {
   require_once("../../../init.php");
@@ -52,7 +52,7 @@ foreach($usedTemplates as $name => $body)
 }
 
 // SQL tables
-if($isCLI) echo $lineBreak."* Creating SQL tables".$lineBreak;
+if($isCLI) echo $lineBreak.$lineBreak."* Creating SQL tables *".$lineBreak;
 
 if($isCLI) echo "- Creating tblnamesrsjobs table".$lineBreak;
 $q = 'CREATE TABLE IF NOT EXISTS `tblnamesrsjobs` (
@@ -113,8 +113,8 @@ catch (PDOException $e)
 // "orgnr" is a custom client field - SE/NU registries require ID of the person or EIK/VAT of the company
 /* We no longer create this field but take its name from the module config - it is very likely you already have the field defined
 if($isCLI) echo "- Creating custom client field OrgNr".$lineBreak;
-$q = 'INSERT INTO tblcustomfields(type,fieldname,fieldtype,required,showorder,showinvoice) 
-  SELECT "client","orgnr|Organization Number / Personal Number","text","on","on","on" FROM dual 
+$q = 'INSERT INTO tblcustomfields(type,fieldname,fieldtype,required,showorder,showinvoice)
+  SELECT "client","orgnr|Organization Number / Personal Number","text","on","on","on" FROM dual
   WHERE NOT EXISTS(SELECT 1 FROM tblcustomfields AS t3 WHERE fieldname LIKE "orgnr|%")';
 try
 {
@@ -212,3 +212,32 @@ catch (PDOException $e)
   echo $e->getTraceAsString().$lineBreak;
   echo $e->getMessage().$lineBreak;
 }
+
+// append our definition for additional domain fields (currently only .NO)
+if($isCLI) echo $lineBreak."* Adding our custom additional domain fields *".$lineBreak;
+$filepath = implode(DIRECTORY_SEPARATOR, array(ROOTDIR,"resources","domains","additionalfields.php"));
+if(file_exists($filepath))
+{
+  $new_comment = "// NameSRS additional domain fields";
+  $new_text = "include ROOTDIR.'/modules/registrars/namesrs/additional_domain_fields.php';";
+  // modify existing file
+  $old = file_get_contents($filepath);
+  if ($old === FALSE AND $isCLI) echo "Could not read from \033[96m".$filepath."\033[0m file - you will have to manually add there this text = \033[92m".$new_text."\033[0m";
+  else
+  {
+    if (!strpos($old, "/modules/registrars/namesrs/additional_domain_fields.php"))
+    {
+      $old = str_replace('<'.'?php',"<"."?php".PHP_EOL.PHP_EOL.$new_comment.PHP_EOL.$new_text.PHP_EOL.PHP_EOL,$old);
+      $result = file_put_contents($filepath,$old);
+      if ($result === FALSE AND $isCLI) echo "Could not update the file \033[96m".$filepath."\033[0m - you will have to manually add there this text =\033[92m <"."?php ".$new_text."\033[0m";
+    }
+  }
+}
+else
+{
+  // create new file
+  $result = file_put_contents($filepath,"<"."?php".PHP_EOL.PHP_EOL.$new_comment.PHP_EOL.$new_text.PHP_EOL.PHP_EOL);
+  if ($result === FALSE AND $isCLI) echo "Could not create the file \033[96m".$filepath."\033[0m - you will have to manually create it with the following content =\033[92m <"."?php ".$new_text."\033[0m";
+}
+
+if($isCLI) echo $lineBreak;
