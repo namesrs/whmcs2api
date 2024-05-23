@@ -8,6 +8,7 @@
 include_once __DIR__."/version.php";
 include_once __DIR__."/vendor/autoload.php";
 use WHMCS\Database\Capsule as Capsule;
+use WHMCS\Exception\Module\InvalidConfiguration as InvalidConfig;
 
 \Sentry\init([
   'dsn' => 'https://2492d31026d3f16e2ca2969d03618b64@o475096.ingest.us.sentry.io/4507118220083200',
@@ -19,6 +20,18 @@ use WHMCS\Database\Capsule as Capsule;
 $pdo = Capsule::connection()->getPdo();
 define('API_HOST',"api.domainname.systems");
 
+require_once "lib/Request.php";
+require_once "lib/NameServers.php";
+require_once "lib/DNSrecords.php";
+require_once "lib/DNSSEC.php";
+require_once "lib/Contact.php";
+require_once "lib/Privacy.php";
+require_once "lib/Lock.php";
+require_once "lib/DomainRegister.php";
+require_once "lib/DomainTransfer.php";
+require_once "lib/DomainRenew.php";
+require_once "lib/Search.php";
+
 function namesrs_getConfigArray()
 {
   $result = Capsule::select("select code from tblcurrencies where `default` limit 1");
@@ -26,7 +39,7 @@ function namesrs_getConfigArray()
 
 	$configarray = array(
 	  "Description" => array("Type" => "System", "Value" => "version ".VERSION.' ('.STAMP.')'),
-	  "API_key" => array( "Type" => "text", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
+	  "API_key" => array( "Type" => "password", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
 	  "Base_URL" => array( "Type" => "text", "Size" => "25", "Default" => API_HOST, "Description" => "Hostname for API endpoints", "FriendlyName" => "Base URL"),
 	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameSRS's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
@@ -53,6 +66,27 @@ function namesrs_getConfigArray()
     "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
   );
 	return $configarray;
+}
+
+function namesrs_config_validate($params)
+{
+  if(trim($params['API_key']) == '') throw new InvalidConfig('Missing API key');
+  elseif(strlen(trim($params['API_key'])) < 50) throw new InvalidConfig('Incorrect API key');
+  if (trim($params['Base_URL']) != '')
+  {
+    $result = isValidDomain($params['Base_URL']);
+    if ($result !== TRUE) throw new InvalidConfig($result);
+  }
+  if (trim($params['exchange_rate']) != '')
+  {
+    if ($params['exchange_rate'] <= 0) throw new InvalidConfig('Exchange rate must be a positive number');
+  }
+  else
+  {
+    $result = Capsule::select("select code from tblcurrencies where `default` limit 1");
+    $base_currency = $result[0]->code;
+    throw new InvalidConfig('Missing exchange rate for '.$base_currency.'/SEK');
+  }
 }
 
 // PARAMS
@@ -113,18 +147,6 @@ function namesrs_AdminCustomButtonArray($params)
 	);
 	return $buttonarray;
 }
-
-require_once "lib/Request.php";
-require_once "lib/NameServers.php";
-require_once "lib/DNSrecords.php";
-require_once "lib/DNSSEC.php";
-require_once "lib/Contact.php";
-require_once "lib/Privacy.php";
-require_once "lib/Lock.php";
-require_once "lib/DomainRegister.php";
-require_once "lib/DomainTransfer.php";
-require_once "lib/DomainRenew.php";
-require_once "lib/Search.php";
 
 function namesrs_GetEPPCode($params)
 {

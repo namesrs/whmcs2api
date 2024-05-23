@@ -4,6 +4,24 @@ use WHMCS\Database\Capsule as Capsule;
 
 require_once("Cache.php");
 
+function isValidDomain($text)
+{
+  $ipNumber1 = '(?:0{0,2}[1-9]|0?[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])';
+  $ipNumber2 = '(?:0{0,2}[0-9]|0?[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])';
+  $patternIP = '/^'.$ipNumber1.'\\.'.$ipNumber2.'\\.'.$ipNumber2.'\\.'.$ipNumber2.'$/';
+  $pattern = '/^([a-z\d]([a-z\d-]{0,61}[a-z\d])?\.){2,}[a-z\d]([a-z\d-]{0,61}[a-z\d])+$/i';
+  if ($text AND strlen($text) > 255) return 'Hostname is too long';
+  return $text
+    ? (preg_match($pattern, $text)
+      ? (preg_match($patternIP, $text)
+        ? 'Invalid hostname'
+        : true
+      )
+      : 'Invalid hostname'
+    )
+    : true;
+}
+
 /**
  * @param $code {string} - unique identifier of the notification so we can skip it if disabled through configuration
  * @param $title {string} - the error message in the email notification
