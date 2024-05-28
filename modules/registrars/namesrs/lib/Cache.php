@@ -70,13 +70,13 @@ Class DomainCache
 {
   public static function get($domainName)
   {
-    if(!$_SESSION['namesrsDomainCache']) $_SESSION['namesrsDomainCache'] = array();
+    if(empty($_SESSION['namesrsDomainCache'])) $_SESSION['namesrsDomainCache'] = array();
     return $_SESSION['namesrsDomainCache'][$domainName];
   }
 
   public static function put($domain)
   {
-    if(!$_SESSION['namesrsDomainCache'] OR count($_SESSION['namesrsDomainCache']) > 1000) $_SESSION['namesrsDomainCache'] = array();
+    if(empty($_SESSION['namesrsDomainCache']) OR count($_SESSION['namesrsDomainCache']) > 1000) $_SESSION['namesrsDomainCache'] = array();
     $_SESSION['namesrsDomainCache'][$domain['domainname']] = $domain;
   }
 
