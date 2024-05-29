@@ -423,6 +423,7 @@ function logSentry($message, $context = array())
 {
   \Sentry\withScope(function (\Sentry\State\Scope $scope) use ($message,$context): void
   {
+    $context['WHMCS_VERSION'] = WHMCS\Application::FILES_VERSION;
     $scope->setContext('WHMCS context', $context);
 
     \Sentry\captureMessage($message);
