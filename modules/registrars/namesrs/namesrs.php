@@ -13,6 +13,7 @@ use WHMCS\Exception\Module\InvalidConfiguration as InvalidConfig;
 \Sentry\init([
   'dsn' => 'https://2492d31026d3f16e2ca2969d03618b64@o475096.ingest.us.sentry.io/4507118220083200',
   'release' => (string)VERSION,
+  'attachStacktrace' => TRUE,
 ]);
 
 
