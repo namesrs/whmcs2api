@@ -267,14 +267,14 @@ Class RequestSRS
         return $domain;
       }
 */
+    $handle = 0;
     $result = $pdo->query('SELECT namesrs_id FROM tblnamesrshandles WHERE type = 1 AND whmcs_id = ' . (int)$this->params['domainid']);
     if ($result->rowCount()) $handle = $result->fetch(PDO::FETCH_NUM)[0];
     else
     {
       $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200, 'exact' => 1]);
-      if ($list)
+      if ($list AND is_array($list['items']))
       {
-        $handle = 0;
         foreach($list['items'] as $domItem)
         {
           if($domItem['domainname'] == $this->domainName)
@@ -296,8 +296,8 @@ Class RequestSRS
         }
     }
     $result = $this->request('GET', "/domain/domaindetails", ['itemid' => $handle]);
-    $domain = $result['items'][$handle];
-    if(!$domain OR $domain['domainname'] != $this->domainName)
+    if(isset($result) AND is_array($result['items'])) $domain =  $result['items'][$handle];
+    if(empty($domain) OR $domain['domainname'] != $this->domainName)
     {
       // either no info returned (wrong domain ID) or domain name is not ours (again wrong domain ID)
       // so we need to ask for the domain ID and update our mapping, if possible

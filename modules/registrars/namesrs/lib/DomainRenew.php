@@ -15,7 +15,7 @@ function namesrs_RenewDomain($params)
     ));
     $handle = $result['parameters']['requestID'][0];
     $api->queueRequest(2 /* renew */, $params['domainid'], $handle);
-    if($params['default_pending']) domainStatus($params['domainid'], 'Pending');
+    if(isset($params['default_pending'])) domainStatus($params['domainid'], 'Pending');
     return array('success' => true);
   }
   catch (Exception $e)
