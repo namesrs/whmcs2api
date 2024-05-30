@@ -339,7 +339,7 @@ Class RequestSRS
     );
     DomainCache::put($domain);
     // store the mapping between WHMCS domainID and NameISP domainHandle
-    if($domain['custom_field'] != 0) $this->params['domainid'] = $domain['custom_field'];
+    if(isset($domain['custom_field']) AND $domain['custom_field'] != 0) $this->params['domainid'] = $domain['custom_field'];
     if ($this->params['domainid'] != 0)
     {
       $pdo->query('INSERT INTO tblnamesrshandles(whmcs_id,type,namesrs_id) VALUES(' . $this->params['domainid'] . ',1,' . $handle . ') ON DUPLICATE KEY UPDATE namesrs_id = VALUES(namesrs_id)');
