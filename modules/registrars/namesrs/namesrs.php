@@ -13,7 +13,22 @@ use WHMCS\Exception\Module\InvalidConfiguration as InvalidConfig;
 \Sentry\init([
   'dsn' => 'https://2492d31026d3f16e2ca2969d03618b64@o475096.ingest.us.sentry.io/4507118220083200',
   'release' => (string)VERSION,
-  'attachStacktrace' => TRUE,
+  'attach_stacktrace' => TRUE,
+  'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event 
+  {
+    if ($hint !== null && $hint->exception !== null)
+    {
+      $errFile = $hint->exception->getFile();
+      if (!(str_contains($errFile, '/modules/registrars/namesrs/') 
+        OR str_contains($errFile, '/modules/addons/namesrs_price/')
+        OR str_contains($errFile, '/modules/servers/namesrsowner/')
+      ))
+      {
+        return NULL;
+      }
+    }
+    return $event;
+  },
 ]);
 
 
