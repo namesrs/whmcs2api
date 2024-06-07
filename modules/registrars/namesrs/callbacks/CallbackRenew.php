@@ -32,7 +32,6 @@ if($status == 2000)
     $domain = $api->searchDomain(); // it will update expiration date, next due date and registration date
 
     domainStatus($req['domain_id'], 'Active');
-
   }
 }
 elseif($status == 1)
@@ -51,8 +50,8 @@ else
   logModuleCall(
     'nameSRS',
     'callback_renewal_unknownError',
-    $req['domain'],
-    'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
+    'Unknown error in Callback for Renew = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'],
+    $json
   );
   emailAdmin("NameSRS Status", array(
     'domain_name' => $req['domain'],
@@ -60,5 +59,4 @@ else
     'status' => $substatus_name,
     'errors' => $substatus_name
   ));
-  logSentry('Unknown error in Callback for Renew = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'], $json);
 }

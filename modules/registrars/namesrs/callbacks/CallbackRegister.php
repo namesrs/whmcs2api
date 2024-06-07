@@ -105,8 +105,8 @@ else
   logModuleCall(
     'nameSRS',
     'callback_register_unknownError',
-    json_encode($json,JSON_PRETTY_PRINT),
-    'Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain']
+    'Unknown error in Callback for Registration = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'],
+    $json
   );
   emailAdmin("NameSRS Status", array(
     'domain_name' => $req['domain'],
@@ -114,5 +114,4 @@ else
     'status' => $substatus_name,
     'errors' => $substatus_name
   ));
-  logSentry('Unknown error in Callback for Registration = Main status ('.$status.' = '.$status_name.'), substatus ('.$substatus.' = '.$substatus_name.'), domain = '.$req['domain'], $json);
 }

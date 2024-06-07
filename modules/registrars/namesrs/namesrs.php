@@ -10,28 +10,6 @@ include_once __DIR__."/vendor/autoload.php";
 use WHMCS\Database\Capsule as Capsule;
 use WHMCS\Exception\Module\InvalidConfiguration as InvalidConfig;
 
-\Sentry\init([
-  'dsn' => 'https://2492d31026d3f16e2ca2969d03618b64@o475096.ingest.us.sentry.io/4507118220083200',
-  'release' => (string)VERSION,
-  'attach_stacktrace' => TRUE,
-  'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event 
-  {
-    if ($hint !== null && $hint->exception !== null)
-    {
-      $errFile = $hint->exception->getFile();
-      if (!(str_contains($errFile, '/modules/registrars/namesrs/') 
-        OR str_contains($errFile, '/modules/addons/namesrs_price/')
-        OR str_contains($errFile, '/modules/servers/namesrsowner/')
-      ))
-      {
-        return NULL;
-      }
-    }
-    return $event;
-  },
-]);
-
-
 /** @var  $pdo PDO */
 $pdo = Capsule::connection()->getPdo();
 define('API_HOST',"api.domainname.systems");
@@ -78,9 +56,6 @@ function namesrs_getConfigArray()
     "ENABLE_NOTIFY_UNK_TEMPLATE" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Notify about unrecognized template name", "Description" => "Notify Admins by e-mail when the API callback uses unrecognized template name" ),
     "ENABLE_NOTIFY_EXCEPTION" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Notify about PHP run-time errors", "Description" => "Notify Admins by e-mail when there is a run-time error in the PHP code" ),
 	);
-	if($_SERVER['HTTP_HOST'] == 'whmcs.namesrs.com') $configarray['Test_mode'] = array(
-    "Type" => "yesno", "Size" => "20", "Description" => "Use the fake NameISP backend instead of the real API", "FriendlyName" => "Test mode"
-  );
 	return $configarray;
 }
 
@@ -170,7 +145,12 @@ function namesrs_GetEPPCode($params)
   $api = new RequestSRS($params);
   if (!$allow)
   {
-    logSentry('Trying to get EPP code for "'.$api->domainName.'" but not allowed by Admin');
+    logModuleCall(
+      'nameSRS',
+      'Trying to get EPP code for "'.$api->domainName.'" but not allowed by Admin',
+      json_encode($params,JSON_PRETTY_PRINT),
+      ''
+    );
     return array(
       'error' => 'Please contact the support to get the EPP code'
     );
@@ -182,7 +162,12 @@ function namesrs_GetEPPCode($params)
 	}
   catch (Exception $e)
   {
-    \Sentry\captureException($e);
+    logModuleCall(
+      'nameSRS',
+      $e->getMessage(),
+      '',
+      $e->getTrace(),
+    );
     return array(
       'error' => $e->getMessage(),
     );
@@ -265,7 +250,12 @@ function namesrs_domain_status($params)
   }
   catch(Exception $e)
   {
-    \Sentry\captureException($e);
+    logModuleCall(
+      'nameSRS',
+      $e->getMessage(),
+      $e->getTraceAsString(),
+      ''
+    );
     return $e->getMessage();
   }
 }
@@ -280,7 +270,12 @@ function namesrs_Sync($params)
   }
   catch (Exception $e)
   {
-    \Sentry\captureException($e);
+    logModuleCall(
+      'nameSRS',
+      $e->getMessage(),
+      $e->getTraceAsString(),
+      ''
+    );
     return array('error' => $e->getMessage());
   }
   if(is_array($domain))
@@ -317,10 +312,15 @@ function namesrs_sale_cost($api,$params,$operation)
     if(is_array($results)) $price = $results['domains']['domain'][0]['firstpaymentamount'];
     else
     {
-      logSentry('Could not get domain selling price from WHMCS', [
-        'domainid' => $params['domainid'],
-        'domain' => $api->domainName,
-      ]);
+      logModuleCall(
+        'nameSRS',
+        'Could not get domain selling price from WHMCS',
+        '',
+        [
+          'domainid' => $params['domainid'],
+          'domain' => $api->domainName,
+        ]
+      );
       return Array('error' => 'NameSRS: Could not get domain selling price from WHMCS');
     }
     // get user's currency
@@ -342,9 +342,14 @@ function namesrs_sale_cost($api,$params,$operation)
     ));
     if(!is_array($result['pricelist']['domains'][$params['tld']]))
     {
-      logSentry('Missing price class', [
-        'TLD' => $params['tld'],
-      ]);
+      logModuleCall(
+        'nameSRS',
+        'Missing price class',
+        '',
+        [
+          'TLD' => $params['tld'],
+        ]
+      );
       return Array('error' => 'NameSRS: Missing price class');
     }
     $pricing = [];
@@ -355,11 +360,16 @@ function namesrs_sale_cost($api,$params,$operation)
     $retail = $pricing[$operation];
     if(!is_array($retail))
     {
-      logSentry('Could not get the current TLD price', [
-        'TLD' => $params['tld'],
-        'operation' => $operation,
-        'pricelist' => $result['pricelist']['domains'][$params['tld']],
-      ]);
+      logModuleCall(
+        'nameSRS',
+        'Could not get the current TLD price',
+        '',
+        [
+          'TLD' => $params['tld'],
+          'operation' => $operation,
+          'pricelist' => $result['pricelist']['domains'][$params['tld']],
+        ]
+      );
       return Array('error' => 'NameSRS: Could not get the current TLD price');
     }
     $cost[$retail['currency']] = $retail['price'];
@@ -380,10 +390,15 @@ function namesrs_sale_cost($api,$params,$operation)
     {
       if($params['exchange_rate'] <= 0)
       {
-        logSentry('No exchange rate for SEK was set in the module config', [
-          'operation' => $operation,
-          'params' => $params,
-        ]);
+        logModuleCall(
+          'nameSRS',
+          'No exchange rate for SEK was set in the module config',
+          '',
+          [
+            'operation' => $operation,
+            'params' => $params,
+          ]
+        );
         return Array('error' => 'NameSRS: No exchange rate for SEK was set in the module config');
       }
       $min_price = $cost['SEK'] * $exchange_rate * ($params['exchange_rate'] > 0 ? $params['exchange_rate'] : 1);
@@ -391,10 +406,15 @@ function namesrs_sale_cost($api,$params,$operation)
     }
     if($price < $min_price)
     {
-      logSentry('The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency, [
-        'operation' => $operation,
-        'params' => $params,
-      ]);
+      logModuleCall(
+        'nameSRS',
+        'The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency,
+        '',
+        [
+          'operation' => $operation,
+          'params' => $params,
+        ]
+      );
       return Array('error' => 'NameSRS: The selling price '.$price.' '.$user_currency.' is less than the cost '.$min_price.' '.$min_currency);
     }
   }
@@ -432,18 +452,6 @@ function getAdminUser()
 {
   $result = Capsule::select("select username from tbladmins where disabled=0 limit 1");
   return is_array($result) && count($result) ? $result[0]->username : '';
-}
-
-function logSentry($message, $context = array())
-{
-  \Sentry\withScope(function (\Sentry\State\Scope $scope) use ($message,$context): void
-  {
-    $context['WHMCS_VERSION'] = WHMCS\Application::FILES_VERSION;
-    $scope->setContext('WHMCS context', $context);
-
-    \Sentry\captureMessage($message);
-    // or: \Sentry\captureException($e);
-  });
 }
 
 if( php_sapi_name() != 'cli' ) include dirname(__FILE__).'/install.php';

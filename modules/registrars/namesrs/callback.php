@@ -43,10 +43,6 @@ if (in_array($remoteIP, [
       $headers
     );
     adminError("EMPTY_CALLBACK","NameSRS callback - Empty callback received from " . $_SERVER['REMOTE_ADDR'], $payload, $headers);
-    logSentry('Empty callback received from ' . $_SERVER['REMOTE_ADDR'], [
-      'headers' => $headers,
-      'payload' => $payload,
-    ]);
     die;
   }
   logModuleCall(
@@ -109,7 +105,6 @@ if (in_array($remoteIP, [
                 ''
               );
               adminError('UNK_REQ_TYPE',"NameSRS callback - Unknown request type (" . $req['method'] . ") in the WHMCS queue", $req);
-              logSentry('Callback - unknown request type "'.$req['method'].'" in the WHMCS queue', $req);
           }
         }
         else
@@ -122,7 +117,6 @@ if (in_array($remoteIP, [
             ''
           );
           adminError('MISSING_REQID',$json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS", $payload);
-          logSentry($json['objectname']." - missing Request ID (" . $reqid . ") in WHMCS queue", $json);
         }
       }
       else
@@ -135,7 +129,6 @@ if (in_array($remoteIP, [
           ''
         );
         adminError('NO_OBJ_NAME',"NameSRS callback - Missing object name in the callback payload", $json);
-        logSentry('Missing object name in the callback payload', $json);
       }
     }
   }
@@ -174,7 +167,6 @@ if (in_array($remoteIP, [
           ''
         );
         adminError($cnt ? 'NO_CUSTOM_FIELD' : 'DOMAIN_NOT_FOUND',"NameSRS callback - ".$msg, $json);
-        logSentry($msg, $json);
         die;
       }
     }
@@ -274,13 +266,11 @@ if (in_array($remoteIP, [
       'Template is not recognized'
     );
     adminError('UNK_TEMPLATE',"NameSRS callback - ignored unknown template '".$json['template']."' from " . $_SERVER['REMOTE_ADDR'], $json);
-    logSentry('Callback IGNORED from ' . $_SERVER['REMOTE_ADDR'].' - template is not recognized', $json);
   }
 }
 catch (Exception $e)
 {
   //header('HTTP/1.1 500 Error in callback', TRUE, 500);
-  \Sentry\captureException($e);
   logModuleCall(
     'nameSRS',
     "Error processing callback",
@@ -294,7 +284,12 @@ else
 {
   $payload = file_get_contents('php://input');
   $json = json_decode($payload);
-  logSentry('Callback received from unknown source', $json);
+  logModuleCall(
+    'nameSRS',
+    'Callback received from unknown source',
+    json_encode($json,JSON_PRETTY_PRINT),
+    $json,
+  );
 }
 
 function namesrs_log($x)
@@ -387,7 +382,6 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
     $s,
     ''
   );
-  logSentry('Error processing callback = '.$s);
   echo '{"code": 5, "message": '.json_encode($s).'}';
   die;
 }
