@@ -19,6 +19,21 @@ if($status == 200 OR ($status == 2000 AND $substatus == 2001))
  		'messagename' => 'Domain Registration Confirmation',
 		'id' =>$req['domain_id']);
 	$results = localAPI('SendEmail', $postData, $admin);
+
+  // trigger a custom hook
+  $postData = array(
+    'domainid' => $req['domain_id']
+  );
+  $admin = getAdminUser();
+  $apiresults = localAPI('GetClientsDomains', $postData, $admin);
+  $domainDetails = $apiresults['domains']['domain'][0];
+  run_hook('DomainRegistrationCompleted', array(
+    "domainid" => $req['domain_id'],
+    "domain" => $domainDetails['domainname'],
+    "registrationPeriod" => $domainDetails['regperiod'],
+    "expiryDate" => $domainDetails['expirydate'],
+    "registrar" => $domainDetails['registrar']
+  ));
 }
 elseif(in_array((int)$status, Array(2,10,11,4000)))
 {

@@ -32,6 +32,21 @@ if($status == 2000)
     $domain = $api->searchDomain(); // it will update expiration date, next due date and registration date
 
     domainStatus($req['domain_id'], 'Active');
+
+    // trigger a custom hook
+    $postData = array(
+      'domainid' => $req['domain_id']
+    );
+    $admin = getAdminUser();
+    $apiresults = localAPI('GetClientsDomains', $postData, $admin);
+    $domainDetails = $apiresults['domains']['domain'][0];
+    run_hook('DomainRenewalCompleted', array(
+      "domainid" => $req['domain_id'],
+      "domain" => $domainDetails['domainname'],
+      "registrationPeriod" => $domainDetails['regperiod'],
+      "expiryDate" => $domainDetails['expirydate'],
+      "registrar" => $domainDetails['registrar']
+    ));
   }
 }
 elseif($status == 1)

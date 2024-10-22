@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 101 (07 Jun 2024, 16:17)
+# WHMCS modules from NameSRS - version 102 (22 Oct 2024, 13:15)
 -----
 # NOTE 1
 ```
@@ -67,6 +67,22 @@ Domain registrations will fail if you do not provide the name of your custom fie
 The module sends debugging information to the WHMCS module logging mechanism
 
 ![](https://github.com/nameisp/whmcs/raw/master/logging.png)
+
+### Available hooks
+
+The module provides 3 hooks - for successful domain registration / renewal / transfer:
+
+- DomainRegistrationCompleted
+- DomainRenewalCompleted
+- DomainTransferCompleted
+
+The hook will be called with the following arguments:
+
+- `domain_id` - ID of the domain inside WHMCS
+- `domain` - domain name
+- `registrationPeriod` - for how long this domain is registered
+- `expiryDate` - when the domain will expire
+- `registrar` - always equal to `namesrs`
 
 -----
 
