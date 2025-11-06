@@ -15,35 +15,44 @@ function namesrs_RegisterDomain($params)
 
   try
   {
-    $stm = $pdo->prepare('SELECT cfv.value FROM `tblcustomfields` AS cf 
-      JOIN `tblcustomfieldsvalues` AS cfv  ON (cfv.fieldid = cf.id AND cfv.relid = :userid) 
-      WHERE cf.fieldname '.(strpos($params['orgnr_field'], '^') === 0 ? 'R' /* The pattern is RegExp */: '').'LIKE :name AND cf.type = "client" AND COALESCE(cfv.value,"") <> ""');
+    $orgnr = '';
+    $stm = $pdo->prepare(
+      'SELECT cfv.value FROM `tblcustomfields` AS cf
+       JOIN `tblcustomfieldsvalues` AS cfv ON (cfv.fieldid = cf.id AND cfv.relid = :userid)
+       WHERE cf.fieldname ' . (strpos($params['orgnr_field'], '^') === 0 ? 'R' : '') . 'LIKE :name
+         AND cf.type = "client"
+         AND COALESCE(cfv.value,"") <> ""'
+    );
     $stm->execute(['userid' => $params['userid'], 'name' => $params['orgnr_field']]);
-    if ($stm->rowCount())
-    {
-      $orgnr = $stm->fetch(PDO::FETCH_NUM)[0];
-      logModuleCall(
-        'nameSRS',
-        'Getting Personal ID from client',
-        [
-          'personal ID' => $orgnr,
-          'userid' => $params['userid'],
-        ],
-        ''
-      );
-    }
-    else
-    {
-      $orgnr = '';
-      logModuleCall(
-        'nameSRS',
-        'Could not get Personal ID from client',
-        [
-          'personal ID' => 0,
-          'userid' => $params['userid'],
-        ],
-        ''
-      );
+    if ($stm->rowCount()) {
+        $orgnr = $stm->fetch(PDO::FETCH_NUM)[0];
+        logModuleCall(
+          'nameSRS',
+          'Getting Personal ID from client (custom field)',
+          ['personal ID' => $orgnr, 'userid' => $params['userid']],
+          ''
+        );
+    } else {
+        // No custom field found – fall back to WHMCS built-in Tax ID column
+        $stmt = $pdo->prepare('SELECT tax_id FROM tblclients WHERE id = :userid');
+        $stmt->execute(['userid' => $params['userid']]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!empty($row['tax_id'])) {
+            $orgnr = $row['tax_id'];
+            logModuleCall(
+              'nameSRS',
+              'Using Tax ID as OrgNr',
+              ['tax_id' => $orgnr, 'userid' => $params['userid']],
+              ''
+            );
+        } else {
+            logModuleCall(
+              'nameSRS',
+              'No OrgNr or Tax ID found for client',
+              ['userid' => $params['userid']],
+              ''
+            );
+        }
     }
 
     $orig = is_array($params['original']) ? $params['original'] : $params;
@@ -133,4 +142,5 @@ function namesrs_RegisterDomain($params)
     ];
   }
 }
+
 
