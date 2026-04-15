@@ -180,7 +180,7 @@ function namesrs_setContactDetails($params)
   return array(
     'templatefile' => "contactdetails",
     'vars' => array(
-      'error' => 'NameSRS: '.$error,
+      'error' => isset($error) ? 'NameSRS: '.$error : NULL,
       'successful' => $success,
       // 'cid' => $cid,
       'first_name' => $firstname,
