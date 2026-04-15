@@ -6,7 +6,7 @@
 *
 */
 include_once __DIR__."/version.php";
-include_once __DIR__."/vendor/autoload.php";
+//include_once __DIR__."/vendor/autoload.php"; only needed for Sentry which is currently not used (but used to be)
 use WHMCS\Database\Capsule as Capsule;
 use WHMCS\Exception\Module\InvalidConfiguration as InvalidConfig;
 
