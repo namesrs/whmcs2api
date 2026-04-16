@@ -64,7 +64,7 @@ Class RequestSRS
     if ($this->params["Base_URL"]) $this->base_url = trim($this->params["Base_URL"]);
     if ($this->account == '') throw new Exception('NameSRS: Missing API key');
     if ($this->params['Base_URL'] == '') $this->base_url = API_HOST;
-    if ($this->params['DNS_id']) $this->dnsid = (int)$this->params["DNS_id"];
+    if ($this->params['DNS_id']) $this->dns_id = (int)$this->params["DNS_id"];
     logModuleCall(
       'nameSRS',
       'request',
@@ -341,7 +341,7 @@ Class RequestSRS
 
       $handle = 0;
       $list = $this->request('GET', "/domain/domainlist", ['domainname' => $this->domainName, 'status' => 200]);
-      if ($list)
+      if ($list AND is_array($list['items']))
       {
         foreach($list['items'] as $domItem)
         {
