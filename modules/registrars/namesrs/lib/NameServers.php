@@ -13,7 +13,14 @@ function namesrs_GetNameservers($params)
     $values["ns3"] = $ns[2]['nameserver'];
     $values["ns4"] = $ns[3]['nameserver'];
     $values["ns5"] = $ns[4]['nameserver'];
-    $values["success"] = TRUE;
+    if(in_array('inactive.namesrs.com',$values))
+    {
+      $values['error'] = 'The domain needs to be delegated to DNS before it can be used';
+    }
+    else
+    {
+      $values["success"] = TRUE;
+    }
 
     return $values;
   }

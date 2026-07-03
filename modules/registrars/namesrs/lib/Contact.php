@@ -31,7 +31,7 @@ function namesrs_setContactDetails($params)
    */
   $pdo = Capsule::connection()->getPdo();
 
-  $error = false;
+  $error = '';
   $success = false;
   $phone = array();
   $values = array();
@@ -180,7 +180,7 @@ function namesrs_setContactDetails($params)
   return array(
     'templatefile' => "contactdetails",
     'vars' => array(
-      'error' => isset($error) ? 'NameSRS: '.$error : NULL,
+      'error' => ($error != '' ? 'NameSRS: '.$error : NULL),
       'successful' => $success,
       // 'cid' => $cid,
       'first_name' => $firstname,
