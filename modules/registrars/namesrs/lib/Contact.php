@@ -153,7 +153,12 @@ function namesrs_setContactDetails($params)
           // product exists in the cart - update its custom field with the new registrant details
           $_SESSION['cart']['products'][$idx]['customfields'][$fid] = json_encode($values);
         }
-        $redirect = 'window.location.href = "/cart.php?a=checkout";';
+        // Redirect immediately via HTTP instead of rendering the full page
+        // and relying on a client-side JS redirect at the bottom of the template.
+        // This avoids an unnecessary full-page render (including third-party
+        // widgets and fonts) purely to redirect the browser away from it.
+        header('Location: /cart.php?a=checkout');
+        exit;
       }
     }
     else
@@ -193,7 +198,6 @@ function namesrs_setContactDetails($params)
       'address' => $address,
       'phone' => $phone[1],
       'email' => $email,
-      'redirect' => $redirect,
       'readonly' => $params['owner_change'] ? '' : 'readonly',
       'hide_submit' => $params['owner_change'] ? '' : 'hidden',
     ),

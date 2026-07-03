@@ -68,4 +68,3 @@
 </p>
 
 </form>
-<script language="JavaScript" type="text/javascript">{$redirect}</script>
