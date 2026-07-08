@@ -35,10 +35,11 @@ function namesrs_getConfigArray()
 	  "Description" => array("Type" => "System", "Value" => "version ".VERSION.' ('.STAMP.')'),
 	  "API_key" => array( "Type" => "password", "Size" => "65", "Description" => "Enter your API key here", "FriendlyName" => "API key" ),
 	  "Base_URL" => array( "Type" => "text", "Size" => "25", "Default" => API_HOST, "Description" => "Hostname for API endpoints", "FriendlyName" => "Base URL"),
-	  "AutoExpire" => array( "Type" => "yesno", "Size" => "20", "Description" => "Do not use NameSRS's auto-renew feature. Let WHMCS handle the renew","FriendlyName" =>"Auto Expire"),
     "DNSSEC" => array( "Type" => "yesno", "Description" => "Display the DNSSEC Management functionality in the domain details" ),
+    "show_registrant" => array( "Type" => "yesno", "FriendlyName" => "Show owner details", "Description" => "Display the Registrant Management functionality in the domain details" ),
+    "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details (reachable only if 'Show owner' is ON" ),
+    "show_mail_forward" => array( "Type" => "yesno", "FriendlyName" => "Show e-mail forwarding settings", "Description" => "Display the E-mail Forwarding functionality in the domain details" ),
     "DNS_id" => array( "Type" => "text", "Size" => "20", "FriendlyName" => "DNS id", "Description" => "ID of your DNS template in NameSRS to be used for every new domain registration/transfer" ),
-    "owner_change" => array( "Type" => "yesno", "FriendlyName" => "Enable owner transfer", "Description" => "Enable/disable ability to change registrant details" ),
     "sync_due_date" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Enable NextDueDate synchronization", "Description" => "Enable/disable automatic sync/update of Next Due Date every time you access domain details" ),
     //"custom_orgnr" => array( "Type" => "yesno", "Default" => "1", "FriendlyName" => "Use custom OrgID field", "Description" => "Use a custom field (whose name is specified below) for Organization ID instead of WHMCS default Tax ID field" ),
     "orgnr_field" => array( "Type" => "text", "Size" => "65", "Default" => "orgnr|%", "FriendlyName" => "OrgNr field name", "Description" => "The name of the custom field in user details that is used as Company/Person ID. You can use a POSIX regular expression if you need to handle multiple field names - begin the RegExp with ^ (to distinguish from a regular MySQL search pattern) and then use alternation symbol | (pipe) as a logical OR" ),
@@ -95,17 +96,12 @@ function namesrs_ClientAreaCustomButtonArray($params)
   /**
    * @var $pdo PDO
    */
-  $pdo = Capsule::connection()->getPdo();
-
-  $buttonarray = array(
-	 "Set E-mail forwarding" => "setEmailForwarding",
-	 "Registrant details" => "setContactDetails"
-	);
-	if ( isset($params["domainid"]) ) $domainid = $params["domainid"];
+  /*$pdo = Capsule::connection()->getPdo();
+  if ( isset($params["domainid"]) ) $domainid = $params["domainid"];
   else if ( !isset($_REQUEST["id"]) )
   {
     $params = $GLOBALS["params"];
-		$domainid = $params["domainid"];
+    $domainid = $params["domainid"];
   }
   else $domainid = $_REQUEST["id"];
   $result = $pdo->query('SELECT idprotection,domain FROM tbldomains WHERE id = '.(int)$domainid);
@@ -114,17 +110,11 @@ function namesrs_ClientAreaCustomButtonArray($params)
   if ($data)
   {
     if($data["idprotection"]) $buttonarray["WHOIS Privacy"] = "whoisprivacy";
-    /*
-	  if(preg_match('/[.]ca$/i', $data["domain"])) $buttonarray[".CA Registrant WHOIS Privacy"] = "whoisprivacy_ca";
-  	if(preg_match('/[.]ca$/i', $data["domain"])) $buttonarray[".CA Change of Registrant"] = "registrantmodification_ca";
-	  if(preg_match('/[.]it$/i', $data["domain"])) $buttonarray[".IT Change of Registrant"] = "registrantmodification_it";
-	  if(preg_match('/[.]ch$/i', $data["domain"])) $buttonarray[".CH Change of Registrant"] = "registrantmodification_tld";
-	  if(preg_match('/[.]li$/i', $data["domain"])) $buttonarray[".LI Change of Registrant"] = "registrantmodification_tld";
-	  if(preg_match('/[.]se$/i', $data["domain"])) $buttonarray[".SE Change of Registrant"] = "registrantmodification_tld";
-	  if(preg_match('/[.]sg$/i', $data["domain"])) $buttonarray[".SG Change of Registrant"] = "registrantmodification_tld";
-	  */
-	}
+  }*/
 
+  $buttonarray = array();
+  if($params["show_mail_forward"] == "on") $buttonarray["Set E-mail forwarding"] = "setEmailForwarding";
+	if($params["show_registrant"] == "on") $buttonarray["Registrant details"] = "setContactDetails";
 	if($params["DNSSEC"] == "on")	$buttonarray["DNSSEC Management"] = "dnssec";
 
 	return $buttonarray;
