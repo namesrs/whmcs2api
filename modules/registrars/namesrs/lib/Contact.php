@@ -199,7 +199,7 @@ function namesrs_setContactDetails($params)
       'phone' => $phone[1],
       'email' => $email,
       'readonly' => $params['owner_change'] ? '' : 'readonly',
-      'hide_submit' => $params['owner_change'] ? '' : 'hidden',
+      'hide_submit' => $params['owner_change'] ? NULL : 'hidden',
     ),
   );
 }

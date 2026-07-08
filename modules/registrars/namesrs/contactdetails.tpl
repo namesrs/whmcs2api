@@ -62,9 +62,10 @@
 		</tr>
 	</tbody>
 </table>
-
-<p class="text-center" {$hide_submit}>
-  <input class="btn btn-large btn-primary" type="submit" name="cmdSave" value="{$LANG.clientareasavechanges}">
-</p>
+{if not $hide_submit}
+	<p class="text-center">
+		<input class="btn btn-large btn-primary" type="submit" name="cmdSave" value="{$LANG.clientareasavechanges}">
+	</p>
+{/if}
 
 </form>
