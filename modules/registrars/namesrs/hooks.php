@@ -2,6 +2,7 @@
 
 use WHMCS\Database\Capsule as Capsule;
 use WHMCS\Domains\Domain as DomPuny;
+use WHMCS\View\Menu\Item as MenuItem;
 
 add_hook("AfterRegistrarRegistration",1,function($vars)
 {
@@ -40,8 +41,6 @@ add_hook("AfterRegistrarTransfer",1,function($vars)
     ));
   }
 });
-
-use WHMCS\View\Menu\Item as MenuItem;
 
 // disable some of the built-in WHMCS menus in the sidebar as we either do not support
 // the functionality or offer better implementations
@@ -208,3 +207,19 @@ add_hook('ShoppingCartValidateDomainsConfig', 50, function ($vars)
 
   return $errors;
 });
+
+add_hook('ClientAreaPageDomainAddons', 1, 'registrarShowErrorMessage');
+add_hook('ClientAreaPageDomainContacts', 1, 'registrarShowErrorMessage');
+add_hook('ClientAreaPageDomainDNSManagement', 1, 'registrarShowErrorMessage');
+add_hook('ClientAreaPageDomainEmailForwarding', 1, 'registrarShowErrorMessage');
+add_hook('ClientAreaPageDomainRegisterNameservers', 1, 'registrarShowErrorMessage');
+
+function registrarShowErrorMessage($vars)
+{
+  // This global is set in registrar.php and utilized because WHMCS Refuses to show the errors returned by the module functions
+  $errormsg = $GLOBALS['registrar_error'];
+  unset($GLOBALS['registrar_error']);
+  return array(
+    'error' => 'NameSRS: '.$errormsg,
+  );
+}

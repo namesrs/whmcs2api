@@ -18,6 +18,7 @@ function namesrs_GetContactDetails($params)
   }
   catch (Exception $e)
   {
+    $GLOBALS['registrar_error'] = $e->getMessage();
     return array(
       'error' => 'NameSRS: '.$e->getMessage(),
     );
@@ -182,6 +183,7 @@ function namesrs_setContactDetails($params)
   {
     $error = $e->getMessage();
   }
+  $GLOBALS['registrar_error'] = ($error != '' ? 'NameSRS: '.$error : NULL);
   return array(
     'templatefile' => "contactdetails",
     'vars' => array(

@@ -336,15 +336,9 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
     $Line = (isset($arr['line']) ? $arr['line'] : "unknown");
     $File = (isset($arr['file']) ? str_replace('/var/www/whmcs', '', $arr['file']) : "unknown");
     $s .= "\n<br>";
-    for ($i = 0; $i < $tabs; $i++)
-    {
-      $s .= '#';
-    }
+    $s .= str_repeat('#', $tabs);
     $s .= ' <b>' . $Line . '</b>, <font color="blue">' . $File . "</font>\n<br>";
-    for ($i = 0; $i < $tabs; $i++)
-    {
-      $s .= ' ';
-    }
+    $s .= str_repeat(' ', $tabs);
     $tabs++;
     $s .= ' ';
     if (isset($arr['class']))
@@ -382,6 +376,7 @@ function myErrorHandler($errno, $errstr, $errfile, $errline)
     $s,
     ''
   );
+  adminError('EXCEPTION',"NameSRS module - run-time error (".$errstr.")", $s);
   echo '{"code": 5, "message": '.json_encode($s).'}';
   die;
 }

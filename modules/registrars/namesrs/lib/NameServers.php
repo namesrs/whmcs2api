@@ -22,6 +22,7 @@ function namesrs_GetNameservers($params)
     // More details
     $msg = $e->getMessage();
     if (substr($msg, 0, 6) == '(2003)') $msg = 'This domain is either not registered with us or currently being transferred';
+    $GLOBALS['registrar_error'] =  $msg;
     return array(
       'error' => 'NameSRS: '.$msg,
     );
@@ -58,6 +59,7 @@ function namesrs_SaveNameservers($params)
   }
   catch (Exception $e)
   {
+    $GLOBALS['registrar_error'] = $e->getMessage();
     return array(
       'error' => 'NameSRS: '.$e->getMessage(),
     );

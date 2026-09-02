@@ -199,10 +199,18 @@ Class RequestSRS
       CURLOPT_RETURNTRANSFER => 1,
       CURLOPT_SSL_VERIFYHOST => 2,
       CURLOPT_SSL_VERIFYPEER => 1,
-      //CURLOPT_TIMEOUT => 35, removed by FREI
+      CURLOPT_HTTPHEADER =>
+        Array(
+          'WHMCS: '.$this->params['whmcsVersion'],
+        ),
     ]);
     if (is_array($postfields))
     {
+      if ($this->params['include_stacktrace'] == 'on' && strtoupper($action) == 'POST')
+      {
+        $e = new \Exception;
+        $postfields['stacktrace'] = $this->jTraceEx($e);
+      }
       // converts indexed field names into array syntax (e.g. "ns[2]" becomes "ns[]")
       $query = preg_replace('/%5B[0-9]+%5D=/simU', '%5B%5D=', http_build_query($postfields, 'x_', '&', PHP_QUERY_RFC3986));
     }
@@ -235,21 +243,21 @@ Class RequestSRS
 
     $response = curl_exec($ch);
     if (curl_errno($ch))
-      {
-        logModuleCall(
-          'nameSRS',
-          'cURL connection error',
-          '('.curl_errno($ch).') '.curl_error($ch),
-          [
-            'headers' => $headers,
-            'function' => $functionName,
-            'payload' => $postfields,
-            'response' => json_decode($response),
-            'raw_response' => $response,
-          ]
-        );
-        throw new Exception('NameSRS: Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
-      }
+    {
+      logModuleCall(
+        'nameSRS',
+        'cURL connection error',
+        '('.curl_errno($ch).') '.curl_error($ch),
+        [
+          'headers' => $headers,
+          'function' => $functionName,
+          'payload' => $postfields,
+          'response' => json_decode($response),
+          'raw_response' => $response,
+        ]
+      );
+      throw new Exception('NameSRS: Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+    }
     curl_close($ch);
     $result = json_decode($response, TRUE);
     logModuleCall(
@@ -260,9 +268,9 @@ Class RequestSRS
       $result
     );
     if ($result === NULL && json_last_error() !== JSON_ERROR_NONE)
-      {
-        throw new Exception('NameSRS: Bad response received from API');
-      }
+    {
+      throw new Exception('NameSRS: Bad response received from API');
+    }
     return $result;
   }
 
@@ -461,5 +469,55 @@ Class RequestSRS
         $e->getMessage()
       );
     }
+  }
+
+  /**
+   * jTraceEx() - provide a Java style exception trace
+   * @param Throwable $e
+   * @param Array $seen - array passed to recursive calls to accumulate trace lines already seen
+   *                     leave as NULL when calling this function
+   * @return String - one entry per trace line
+   */
+  private function jTraceEx($e, $seen=null)
+  {
+    $starter = $seen ? 'Caused by: ' : '';
+    $result = array();
+    if (!$seen) $seen = array();
+    $trace  = $e->getTrace();
+    $prev   = $e->getPrevious();
+    $result[] = sprintf('%s%s: %s', $starter, get_class($e), $e->getMessage());
+    $file = $e->getFile();
+    $line = $e->getLine();
+    while (true)
+    {
+      $current = "$file:$line";
+      if (is_array($seen) && in_array($current, $seen))
+      {
+        $result[] = sprintf(' ... %d more', count($trace)+1);
+        break;
+      }
+      $result[] = sprintf(' at %s%s%s(%s%s%s)',
+        count($trace) && array_key_exists('class', $trace[0]) ? $trace[0]['class'] : '',
+        count($trace) && array_key_exists('class', $trace[0]) && array_key_exists('function', $trace[0]) ? '.' : '',
+        count($trace) && array_key_exists('function', $trace[0]) ? $trace[0]['function'] : '(main)',
+        $line === null ? $file : basename($file),
+        $line === null ? '' : ':',
+        $line === null ? '' : $line);
+      if (is_array($seen))
+      {
+        $seen[] = "$file:$line";
+      }
+      if (!count($trace))
+      {
+        break;
+      }
+      $file = array_key_exists('file', $trace[0]) ? $trace[0]['file'] : 'Kernel';
+      $line = array_key_exists('file', $trace[0]) && array_key_exists('line', $trace[0]) && $trace[0]['line'] ? $trace[0]['line'] : null;
+      array_shift($trace);
+    }
+    $trace = join("; ", $result);
+    if ($prev) $trace  .= "; " . $this->jTraceEx($prev, $seen);
+
+    return $trace;
   }
 }

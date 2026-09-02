@@ -56,7 +56,7 @@ function namesrs_GetDNS($params)
     $api = new DNSnameSRS($params);
     $dnsrecords = $api->getDNSrecords();
     $result = Array();
-    if(is_array($dnsrecords)) foreach($dnsrecords as &$item)
+    if(is_array($dnsrecords)) foreach($dnsrecords as $item)
     {
       $rec = Array(
         "hostname" => rtrim(str_replace($api->domainName,'',$item['name']),'.'), // eg. www
@@ -84,6 +84,7 @@ function namesrs_GetDNS($params)
   }
   catch (Exception $e)
   {
+    $GLOBALS['registrar_error'] = $e->getMessage();
     return array(
       'error' => 'NameSRS: '.$e->getMessage(),
     );
@@ -176,10 +177,16 @@ function namesrs_SaveDNS($params)
       }
       return array('success' => 'success');
     }
-    else return array('error' => 'NameSRS: To be able to edit the DNS records you need to set the nameservers to "ns1.nameisp.info" and "ns2.nameisp.info"');
+    else
+    {
+      $msg = 'To be able to edit the DNS records you need to set the nameservers to "ns1.nameisp.info" and "ns2.nameisp.info"';
+      $GLOBALS['registrar_error'] = $msg;
+      return array('error' => 'NameSRS: '.$msg);
+    }
   }
   catch (Exception $e)
   {
+    $GLOBALS['registrar_error'] = $e->getMessage();
     return array(
       'error' => 'NameSRS: '.$e->getMessage(),
     );
