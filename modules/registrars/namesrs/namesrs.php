@@ -220,8 +220,8 @@ function namesrs_GetDomainInformation($params)
       }
     }
 
-    $status_id = key($domain['status']);
-    $substatus_id = key($domain['substatus']);
+    $status_id = is_array($domain['status']) ? key($domain['status']) : 0;
+    $substatus_id = is_array($domain['substatus']) ? key($domain['substatus']) : 0;
     switch ($status_id)
     {
       case 200:

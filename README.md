@@ -1,4 +1,4 @@
-# WHMCS modules from NameSRS - version 114 (02 Sep 2026, 10:52)
+# WHMCS modules from NameSRS - version 115 (09 Oct 2026, 16:28)
 -----
 # NOTE 1
 ```

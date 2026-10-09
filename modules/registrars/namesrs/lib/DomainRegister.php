@@ -40,7 +40,7 @@ function namesrs_RegisterDomain($params)
     }
     else
     {
-      // No custom field found – fall back to WHMCS built-in Tax ID column
+      // No custom field found - fall back to WHMCS built-in Tax ID column
       $stmt = $pdo->prepare('SELECT tax_id FROM tblclients WHERE id = :userid');
       $stmt->execute(['userid' => $params['userid']]);
       $row = $stmt->fetch(PDO::FETCH_NUM);
